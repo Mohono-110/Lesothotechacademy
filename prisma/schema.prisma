@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Student {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String
+  firstName     String
+  lastName      String
+  phone         String?
+  dateOfBirth   String?
+  gender        String?
+  address       String?
+  city          String   @default("Leribe")
+  country       String   @default("Lesotho")
+  profileImage  String?
+  isActive      Boolean  @default(true)
+  isVerified    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  applications  Application[]
+  enrollments   Enrollment[]
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String
+  duration    String
+  durationMonths Int
+  price       Float
+  currency    String   @default("M")
+  category    String
+  level       String   @default("Beginner")
+  isPublished Boolean  @default(true)
+  image       String?
+  content     String   @default("")
+  objectives  String   @default("[]")
+  modules     String   @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  applications Application[]
+  enrollments  Enrollment[]
+}
+
+model Application {
+  id            String   @id @default(cuid())
+  studentId     String
+  courseId      String
+  status        String   @default("pending") // pending, approved, rejected, enrolled
+  motivationalLetter String?
+  educationLevel String?
+  experience    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  student       Student  @relation(fields: [studentId], references: [id])
+  course        Course   @relation(fields: [courseId], references: [id])
+  payments      Payment[]
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  applicationId String
+  amount        Float
+  currency      String   @default("M")
+  paymentMethod String   // mpesa, ecocash, bank
+  transactionRef String?
+  screenshotUrl String?
+  status        String   @default("pending") // pending, approved, rejected
+  adminNote     String?
+  verifiedBy    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  application   Application @relation(fields: [applicationId], references: [id])
+}
+
+model Enrollment {
+  id            String   @id @default(cuid())
+  studentId     String
+  courseId      String
+  applicationId String
+  status        String   @default("active") // active, suspended, completed, closed
+  enrolledAt    DateTime @default(now())
+  completedAt   DateTime?
+  progress      Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  student       Student  @relation(fields: [studentId], references: [id])
+  course        Course   @relation(fields: [courseId], references: [id])
+}

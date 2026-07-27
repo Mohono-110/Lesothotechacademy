@@ -1,0 +1,9 @@
+# Lesotho Tech Academy
+User-agent: *
+Allow: /
+
+Sitemap: https://lesothotechacademy.com/sitemap.xml
+
+# Lesotho Tech Academy - Premier IT Training in Lesotho
+# Web Development | CMS Development | Computer Networks | Business Development Systems
+# Location: Leribe 300 District, Lesotho
