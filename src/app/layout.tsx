@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import Navbar from "@/components/shared/Navbar";
+import Footer from "@/components/shared/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,20 +16,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lesotho Tech Academy | Learn Code Innovate - Premier IT Training in Leribe, Lesotho",
+  title: {
+    default: "Lesotho Tech Academy | Learn Code Innovate - Premier IT Training in Leribe, Lesotho",
+    template: "%s | Lesotho Tech Academy",
+  },
   description:
-    "Lesotho Tech Academy offers professional IT courses in Web Development, CMS Development, Computer Networks, and Business Development Systems. Based in Leribe 300 District, Lesotho. Enroll today for online and in-person classes.",
+    "Lesotho Tech Academy offers professional IT courses in Web Development (M2600/3mo), Computer Networks (M3500/6mo), CMS Development (M4000/6mo), and Business Development Systems (M2000/3mo). Based in Leribe 300 District, Lesotho. Online classes available. Register with M300.",
   keywords: [
     "Lesotho Tech Academy",
     "IT courses Lesotho",
-    "Web Development Lesotho",
-    "Computer Networks Lesotho",
-    "CMS Development Lesotho",
-    "Business Development Systems",
+    "Web Development Lesotho M2600",
+    "Computer Networks Lesotho M3500",
+    "CMS Development Lesotho M4000",
+    "Business Development Systems M2000",
     "Leribe 300 District",
     "Technology training Lesotho",
-    "Online IT courses",
-    "M300 registration",
+    "Online IT courses Lesotho",
+    "M300 registration fee",
     "M-Pesa payment Lesotho",
     "EcoCash payment Lesotho",
     "Lesotho education",
@@ -35,62 +40,39 @@ export const metadata: Metadata = {
     "Learn to code Lesotho",
     "Relebohile Mohono",
     "LSMTA Science Fair",
-    "Lesotho technology school",
+    "Millicent Academy Junior School",
+    "3 month web development course",
+    "6 month computer networks course",
   ],
-  authors: [
-    { name: "Relebohile Joseph Mohono", url: "https://lesothotechacademy.com" },
-  ],
+  authors: [{ name: "Relebohile Joseph Mohono" }],
   creator: "Lesotho Tech Academy",
   publisher: "Lesotho Tech Academy",
-  icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
-  },
+  icons: { icon: "/logo.png", apple: "/logo.png" },
   openGraph: {
     title: "Lesotho Tech Academy | Learn Code Innovate",
     description:
-      "Premier IT training institution in Lesotho offering Web Development, CMS Development, Computer Networks, and Business Development Systems courses.",
+      "Premier IT training institution in Lesotho. Web Development, CMS, Computer Networks & Business Development Systems. Register for M300.",
     url: "https://lesothotechacademy.com",
     siteName: "Lesotho Tech Academy",
     type: "website",
     locale: "en_LS",
-    images: [
-      {
-        url: "/logo.png",
-        width: 512,
-        height: 512,
-        alt: "Lesotho Tech Academy Logo",
-      },
-    ],
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Lesotho Tech Academy Logo" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Lesotho Tech Academy | Learn Code Innovate",
     description:
-      "Premier IT training institution in Lesotho. Learn Web Development, CMS, Computer Networks & Business Development Systems.",
+      "Premier IT training in Lesotho. Web Dev, CMS, Networks & Business Systems.",
     images: ["/logo.png"],
   },
   robots: {
     index: true,
     follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-  alternates: {
-    canonical: "https://lesothotechacademy.com",
+    googleBot: { index: true, follow: true, "max-video-preview": -1, "max-image-preview": "large", "max-snippet": -1 },
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -100,10 +82,10 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
-      >
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
+        <Navbar />
+        <main className="min-h-screen flex flex-col">{children}</main>
+        <Footer />
         <Toaster position="top-right" richColors closeButton />
       </body>
     </html>
