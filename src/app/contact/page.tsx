@@ -65,7 +65,7 @@ const contactInfo = [
   {
     icon: Mail,
     title: 'Email',
-    value: 'info@lesothotechacademy.com',
+    value: 'info@lesothotechacademy.org',
     color: 'bg-lta-green/10 text-lta-green',
   },
   {
