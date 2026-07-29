@@ -1,0 +1,762 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import { useState, useEffect } from 'react';
+     4→     4→import Link from 'next/link';
+     5→     5→import { useParams } from 'next/navigation';
+     6→     6→import { motion } from 'framer-motion';
+     7→     7→import {
+     8→     8→  Code,
+     9→     9→  Network,
+    10→    10→  Globe,
+    11→    11→  Briefcase,
+    12→    12→  Clock,
+    13→    13→  Banknote,
+    14→    14→  ChevronRight,
+    15→    15→  CheckCircle2,
+    16→    16→  ArrowLeft,
+    17→    17→  GraduationCap,
+    18→    18→  BarChart3,
+    19→    19→  Smartphone,
+    20→    20→  Building2,
+    21→    21→  BookOpen,
+    22→    22→  Loader2,
+    23→    23→  AlertTriangle,
+    24→    24→} from 'lucide-react';
+    25→    25→import { Button } from '@/components/ui/button';
+    26→    26→import {
+    27→    27→  Card,
+    28→    28→  CardContent,
+    29→    29→  CardHeader,
+    30→    30→  CardTitle,
+    31→    31→  CardDescription,
+    32→    32→} from '@/components/ui/card';
+    33→    33→import { Badge } from '@/components/ui/badge';
+    34→    34→import { Separator } from '@/components/ui/separator';
+    35→    35→import {
+    36→    36→  Accordion,
+    37→    37→  AccordionContent,
+    38→    38→  AccordionItem,
+    39→    39→  AccordionTrigger,
+    40→    40→} from '@/components/ui/accordion';
+    41→    41→import {
+    42→    42→  Breadcrumb,
+    43→    43→  BreadcrumbItem,
+    44→    44→  BreadcrumbLink,
+    45→    45→  BreadcrumbList,
+    46→    46→  BreadcrumbPage,
+    47→    47→  BreadcrumbSeparator,
+    48→    48→} from '@/components/ui/breadcrumb';
+    49→    49→
+    50→    50→// ─── Types ───────────────────────────────────────────────────────────────────
+    51→    51→
+    52→    52→interface CourseModule {
+    53→    53→  name: string;
+    54→    54→  weeks: number;
+    55→    55→  description: string;
+    56→    56→  topics: string[];
+    57→    57→}
+    58→    58→
+    59→    59→interface Course {
+    60→    60→  id?: string;
+    61→    61→  title: string;
+    62→    62→  slug: string;
+    63→    63→  description: string;
+    64→    64→  duration: string;
+    65→    65→  durationMonths: number;
+    66→    66→  price: number;
+    67→    67→  currency: string;
+    68→    68→  category: string;
+    69→    69→  level: string;
+    70→    70→  content?: string;
+    71→    71→  objectives: string[];
+    72→    72→  modules: CourseModule[];
+    73→    73→  isPublished?: boolean;
+    74→    74→  image?: string;
+    75→    75→}
+    76→    76→
+    77→    77→// ─── Fallback Data ────────────────────────────────────────────────────────────
+    78→    78→
+    79→    79→const fallbackCourses: Course[] = [
+    80→    80→  {
+    81→    81→    title: 'Web Development Programming',
+    82→    82→    slug: 'web-development-programming',
+    83→    83→    description:
+    84→    84→      'Master modern web development from front-end to back-end. Build responsive, dynamic websites and applications using industry-standard technologies including HTML5, CSS3, JavaScript, React, Node.js, and databases. This comprehensive program takes you from foundational skills to building production-ready applications.',
+    85→    85→    duration: '3 Months',
+    86→    86→    durationMonths: 3,
+    87→    87→    price: 2600,
+    88→    88→    currency: 'M',
+    89→    89→    category: 'Programming',
+    90→    90→    level: 'Beginner to Intermediate',
+    91→    91→    content:
+    92→    92→      'Our Web Development Programming course is designed for aspiring developers who want to build a strong foundation in modern web technologies. Whether you are a complete beginner or have some experience, this course will take you through the complete web development journey.\n\nYou will learn front-end development with HTML5, CSS3, and JavaScript, then advance to React for building dynamic user interfaces. On the back-end, you will master Node.js and Express to create robust APIs, and learn database management with both SQL and NoSQL databases.\n\nThe course emphasizes hands-on projects, real-world scenarios, and industry best practices. By the end of the program, you will have a portfolio of projects and the skills needed to start a career in web development.',
+    93→    93→    objectives: [
+    94→    94→      'Build responsive websites using HTML5, CSS3, and modern frameworks',
+    95→    95→      'Write clean, efficient JavaScript and TypeScript code',
+    96→    96→      'Develop interactive front-end applications with React',
+    97→    97→      'Build server-side applications with Node.js and Express',
+    98→    98→      'Design and manage relational and NoSQL databases',
+    99→    99→      'Deploy applications using version control and cloud platforms',
+   100→   100→      'Understand web security best practices',
+   101→   101→      'Collaborate on projects using Git and agile methodologies',
+   102→   102→    ],
+   103→   103→    modules: [
+   104→   104→      {
+   105→   105→        name: 'HTML5 & CSS3 Fundamentals',
+   106→   106→        weeks: 3,
+   107→   107→        description: 'Learn the building blocks of the web — semantic HTML and modern CSS techniques.',
+   108→   108→        topics: ['Semantic HTML elements & document structure', 'CSS Flexbox & Grid layouts', 'Responsive design & media queries', 'CSS animations & transitions', 'Accessibility best practices (WCAG)'],
+   109→   109→      },
+   110→   110→      {
+   111→   111→        name: 'JavaScript Essentials',
+   112→   112→        weeks: 3,
+   113→   113→        description: 'Master JavaScript programming from fundamentals to advanced concepts.',
+   114→   114→        topics: ['Variables, data types & operators', 'Functions, closures & scope', 'DOM manipulation & event handling', 'Async programming, Promises & async/await', 'ES6+ modern syntax & features'],
+   115→   115→      },
+   116→   116→      {
+   117→   117→        name: 'React & Front-End Frameworks',
+   118→   118→        weeks: 4,
+   119→   119→        description: 'Build dynamic, component-based user interfaces with React.',
+   120→   120→        topics: ['React components & JSX', 'State management with hooks (useState, useEffect, useContext)', 'React Router & client-side navigation', 'API integration & data fetching', 'UI component libraries & design systems'],
+   121→   121→      },
+   122→   122→      {
+   123→   123→        name: 'Back-End Development with Node.js',
+   124→   124→        weeks: 3,
+   125→   125→        description: 'Create robust server-side applications and RESTful APIs.',
+   126→   126→        topics: ['Node.js runtime & Express framework', 'RESTful API design & implementation', 'Database integration (MongoDB & PostgreSQL)', 'Authentication & authorization (JWT)', 'Error handling, logging & middleware'],
+   127→   127→      },
+   128→   128→    ],
+   129→   129→  },
+   130→   130→  {
+   131→   131→    title: 'Computer Networks',
+   132→   132→    slug: 'computer-networks',
+   133→   133→    description:
+   134→   134→      'Gain comprehensive knowledge of computer networking from fundamentals to advanced administration. Learn to design, configure, troubleshoot, and secure modern network infrastructure in enterprise environments.',
+   135→   135→    duration: '6 Months',
+   136→   136→    durationMonths: 6,
+   137→   137→    price: 3500,
+   138→   138→    currency: 'M',
+   139→   139→    category: 'Networking',
+   140→   140→    level: 'Beginner to Advanced',
+   141→   141→    content:
+   142→   142→      'Our Computer Networks course provides an in-depth understanding of modern networking technologies and prepares you for industry-recognized certifications. This six-month program covers everything from basic networking concepts to advanced enterprise-level network administration.\n\nYou will work with real Cisco equipment, learn IP addressing and subnetting, configure VLANs and routing protocols, and implement network security measures. The course also covers wireless networking, cloud networking, and network automation.\n\nGraduates will be well-prepared for roles such as Network Administrator, Network Engineer, Systems Administrator, and IT Support Specialist, with a strong foundation for CCNA and CompTIA Network+ certifications.',
+   143→   143→    objectives: [
+   144→   144→      'Understand networking fundamentals and OSI/TCP-IP models',
+   145→   145→      'Configure and manage Cisco routers and switches',
+   146→   146→      'Implement IP addressing and subnetting schemes',
+   147→   147→      'Design and troubleshoot LAN/WAN networks',
+   148→   148→      'Configure VLANs, STP, and inter-VLAN routing',
+   149→   149→      'Implement network security with firewalls and VPNs',
+   150→   150→      'Manage wireless networks and mobility solutions',
+   151→   151→      'Monitor and optimize network performance',
+   152→   152→      'Prepare for CompTIA Network+ and CCNA certifications',
+   153→   153→      'Understand cloud networking and virtualization',
+   154→   154→    ],
+   155→   155→    modules: [
+   156→   156→      {
+   157→   157→        name: 'Networking Fundamentals',
+   158→   158→        weeks: 4,
+   159→   159→        description: 'Build a solid foundation in networking concepts and protocols.',
+   160→   160→        topics: ['OSI & TCP/IP models', 'Network topologies & architectures', 'Common network protocols (TCP, UDP, ICMP, ARP)', 'Cabling standards & physical layer', 'Network devices (hubs, switches, routers)'],
+   161→   161→      },
+   162→   162→      {
+   163→   163→        name: 'IP Addressing & Subnetting',
+   164→   164→        weeks: 3,
+   165→   165→        description: 'Master IPv4/IPv6 addressing, subnetting, and network segmentation.',
+   166→   166→        topics: ['IPv4 addressing classes & structure', 'Subnetting techniques & practice', 'CIDR & Variable Length Subnet Masking (VLSM)', 'IPv6 fundamentals & transition', 'NAT, PAT & address translation'],
+   167→   167→      },
+   168→   168→      {
+   169→   169→        name: 'Router & Switch Configuration',
+   170→   170→        weeks: 6,
+   171→   171→        description: 'Hands-on configuration of Cisco routers and switches.',
+   172→   172→        topics: ['Cisco IOS CLI navigation & commands', 'VLAN configuration & management', 'Spanning Tree Protocol (STP)', 'Inter-VLAN routing methods', 'Static & dynamic routing (RIP, OSPF)'],
+   173→   173→      },
+   174→   174→      {
+   175→   175→        name: 'Network Security & Administration',
+   176→   176→        weeks: 5,
+   177→   177→        description: 'Implement security measures and manage network infrastructure.',
+   178→   178→        topics: ['Firewall configuration & policies', 'VPN implementation & tunneling', 'Access Control Lists (ACLs)', 'Network monitoring & SNMP', 'Incident response & disaster recovery'],
+   179→   179→      },
+   180→   180→      {
+   181→   181→        name: 'Wireless & Advanced Networks',
+   182→   182→        weeks: 4,
+   183→   183→        description: 'Deploy and manage wireless networks and advanced networking technologies.',
+   184→   184→        topics: ['Wireless standards (802.11a/b/g/n/ac/ax)', 'Wireless security (WPA2, WPA3)', 'Network virtualization (NFV, SDN)', 'Cloud networking basics (AWS, Azure)', 'Network automation & scripting'],
+   185→   185→      },
+   186→   186→    ],
+   187→   187→  },
+   188→   188→  {
+   189→   189→    title: 'CMS Development & Customization',
+   190→   190→    slug: 'cms-development-customization',
+   191→   191→    description:
+   192→   192→      'Learn to build, customize, and manage professional websites using popular Content Management Systems. Master theme development, plugin creation, and advanced customization techniques for WordPress and other CMS platforms.',
+   193→   193→    duration: '6 Months',
+   194→   194→    durationMonths: 6,
+   195→   195→    price: 4000,
+   196→   196→    currency: 'M',
+   197→   197→    category: 'CMS',
+   198→   198→    level: 'Intermediate',
+   199→   199→    content:
+   200→   200→      'Our CMS Development & Customization course is designed for students who want to become professional WordPress developers and CMS specialists. This program covers everything from basic WordPress usage to advanced theme and plugin development.\n\nYou will learn to build custom themes from scratch, create plugins that extend WordPress functionality, implement e-commerce solutions, and optimize websites for performance and search engines. The course also covers security best practices, multi-site management, and integration with third-party services.\n\nThis intermediate-level course assumes basic knowledge of HTML, CSS, and PHP. By the end, you will be able to build any type of WordPress website — from simple blogs to complex e-commerce platforms.',
+   201→   201→    objectives: [
+   202→   202→      'Install, configure, and manage WordPress installations',
+   203→   203→      'Develop custom themes from scratch',
+   204→   204→      'Create custom plugins and widgets',
+   205→   205→      'Implement e-commerce solutions with WooCommerce',
+   206→   206→      'Optimize websites for speed and SEO',
+   207→   207→      'Implement security hardening and regular backups',
+   208→   208→      'Manage multi-site WordPress networks',
+   209→   209→      'Integrate third-party APIs and services',
+   210→   210→      'Deploy and maintain production CMS installations',
+   211→   211→    ],
+   212→   212→    modules: [
+   213→   213→      {
+   214→   214→        name: 'WordPress Fundamentals',
+   215→   215→        weeks: 4,
+   216→   216→        description: 'Master the WordPress ecosystem from installation to content management.',
+   217→   217→        topics: ['WordPress installation & setup', 'Dashboard navigation & settings', 'Pages, posts & media management', 'User roles & permissions', 'WordPress settings & configuration'],
+   218→   218→      },
+   219→   219→      {
+   220→   220→        name: 'Theme Development',
+   221→   221→        weeks: 6,
+   222→   222→        description: 'Build custom WordPress themes using modern development practices.',
+   223→   223→        topics: ['Theme structure & template hierarchy', 'Template files & The Loop', 'Custom post types & taxonomies', 'WordPress Customizer API', 'Responsive theme design principles'],
+   224→   224→      },
+   225→   225→      {
+   226→   226→        name: 'Plugin Development',
+   227→   227→        weeks: 5,
+   228→   228→        description: 'Create custom plugins to extend WordPress functionality.',
+   229→   229→        topics: ['Plugin architecture & best practices', 'Action hooks & filter hooks', 'Custom shortcodes & widgets', 'Admin settings pages & options', 'Plugin security & sanitization'],
+   230→   230→      },
+   231→   231→      {
+   232→   232→        name: 'E-Commerce & Advanced Features',
+   233→   233→        weeks: 5,
+   234→   234→        description: 'Build online stores and implement advanced CMS features.',
+   235→   235→        topics: ['WooCommerce installation & setup', 'Payment gateway integration', 'Product catalog management', 'Advanced theme customizations', 'Performance optimization & caching'],
+   236→   236→      },
+   237→   237→    ],
+   238→   238→  },
+   239→   239→  {
+   240→   240→    title: 'Business Development Systems',
+   241→   241→    slug: 'business-development-systems',
+   242→   242→    description:
+   243→   243→      'Learn to design, implement, and manage business systems that drive growth and efficiency. Master CRM platforms, ERP solutions, business intelligence tools, and digital transformation strategies for modern enterprises.',
+   244→   244→    duration: '3 Months',
+   245→   245→    durationMonths: 3,
+   246→   246→    price: 2000,
+   247→   247→    currency: 'M',
+   248→   248→    category: 'Business',
+   249→   249→    level: 'Beginner to Intermediate',
+   250→   250→    content:
+   251→   251→      'Our Business Development Systems course teaches you how technology drives business success. This program covers the essential business systems that modern organizations rely on — from Customer Relationship Management (CRM) to Enterprise Resource Planning (ERP) and Business Intelligence (BI).\n\nYou will learn to select, implement, and customize business systems for different organizational needs. The course covers workflow automation, data analysis, project management tools, and digital transformation strategies.\n\nThis course is ideal for aspiring business analysts, IT consultants, office managers, and entrepreneurs who want to leverage technology for business growth. No prior technical experience is required.',
+   252→   252→    objectives: [
+   253→   253→      'Understand business systems architecture and design principles',
+   254→   254→      'Implement and configure CRM platforms',
+   255→   255→      'Set up and manage ERP systems for small businesses',
+   256→   256→      'Analyze business data with BI tools',
+   257→   257→      'Design automated workflows and business processes',
+   258→   258→      'Implement project management systems',
+   259→   259→      'Understand digital transformation strategies',
+   260→   260→      'Develop business process documentation',
+   261→   261→    ],
+   262→   262→    modules: [
+   263→   263→      {
+   264→   264→        name: 'Business Systems Fundamentals',
+   265→   265→        weeks: 3,
+   266→   266→        description: 'Understand the role of technology in modern business operations.',
+   267→   267→        topics: ['Business systems overview & types', 'Process mapping & analysis', 'System requirements gathering', 'Technology evaluation & selection', 'Implementation planning & strategy'],
+   268→   268→      },
+   269→   269→      {
+   270→   270→        name: 'CRM & Customer Management',
+   271→   271→        weeks: 3,
+   272→   272→        description: 'Implement customer relationship management systems.',
+   273→   273→        topics: ['CRM platform comparison & selection', 'Contact & lead management', 'Sales pipeline automation', 'Customer analytics & reporting', 'Integration with marketing tools'],
+   274→   274→      },
+   275→   275→      {
+   276→   276→        name: 'ERP & Operations',
+   277→   277→        weeks: 3,
+   278→   278→        description: 'Set up and manage enterprise resource planning systems.',
+   279→   279→        topics: ['ERP fundamentals & modules', 'Inventory management systems', 'Financial management modules', 'HR & payroll basics', 'Reporting & dashboard creation'],
+   280→   280→      },
+   281→   281→      {
+   282→   282→        name: 'Business Intelligence & Automation',
+   283→   283→        weeks: 3,
+   284→   284→        description: 'Leverage data analytics and automation for business growth.',
+   285→   285→        topics: ['BI tool overview (Power BI, Google Data Studio)', 'Data visualization & storytelling', 'Workflow automation tools (Zapier, Make)', 'Digital transformation roadmap', 'Project management tools & methodologies'],
+   286→   286→      },
+   287→   287→    ],
+   288→   288→  },
+   289→   289→];
+   290→   290→
+   291→   291→// ─── Course Config ────────────────────────────────────────────────────────────
+   292→   292→
+   293→   293→const courseConfig: Record<string, { icon: React.ElementType; gradient: string }> = {
+   294→   294→  'web-development-programming': { icon: Code, gradient: 'from-emerald-500 via-teal-500 to-cyan-500' },
+   295→   295→  'computer-networks': { icon: Network, gradient: 'from-blue-500 via-indigo-500 to-purple-500' },
+   296→   296→  'cms-development-customization': { icon: Globe, gradient: 'from-orange-500 via-amber-500 to-yellow-500' },
+   297→   297→  'business-development-systems': { icon: Briefcase, gradient: 'from-rose-500 via-pink-500 to-fuchsia-500' },
+   298→   298→};
+   299→   299→
+   300→   300→// ─── Animation Variants ──────────────────────────────────────────────────────
+   301→   301→
+   302→   302→const fadeUp = {
+   303→   303→  hidden: { opacity: 0, y: 20 },
+   304→   304→  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+   305→   305→};
+   306→   306→
+   307→   307→const staggerContainer = {
+   308→   308→  hidden: { opacity: 0 },
+   309→   309→  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+   310→   310→};
+   311→   311→
+   312→   312→const staggerItem = {
+   313→   313→  hidden: { opacity: 0, x: -15 },
+   314→   314→  visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+   315→   315→};
+   316→   316→
+   317→   317→// ─── Main Page Component ─────────────────────────────────────────────────────
+   318→   318→
+   319→   319→export default function CourseDetailPage() {
+   320→   320→  const params = useParams();
+   321→   321→  const slug = params.slug as string;
+   322→   322→  const [course, setCourse] = useState<Course | null>(null);
+   323→   323→  const [loading, setLoading] = useState(true);
+   324→   324→  const [notFound, setNotFound] = useState(false);
+   325→   325→
+   326→   326→  useEffect(() => {
+   327→   327→    async function fetchCourse() {
+   328→   328→      try {
+   329→   329→        const res = await fetch('/api/courses');
+   330→   330→        if (res.ok) {
+   331→   331→          const data = await res.json();
+   332→   332→          if (data.courses && data.courses.length > 0) {
+   333→   333→            const found = data.courses.find((c: Course) => c.slug === slug);
+   334→   334→            if (found) {
+   335→   335→              setCourse(found);
+   336→   336→            } else {
+   337→   337→              const fallback = fallbackCourses.find((c) => c.slug === slug);
+   338→   338→              if (fallback) {
+   339→   339→                setCourse(fallback);
+   340→   340→              } else {
+   341→   341→                setNotFound(true);
+   342→   342→              }
+   343→   343→            }
+   344→   344→          } else {
+   345→   345→            const fallback = fallbackCourses.find((c) => c.slug === slug);
+   346→   346→            if (fallback) {
+   347→   347→              setCourse(fallback);
+   348→   348→            } else {
+   349→   349→              setNotFound(true);
+   350→   350→            }
+   351→   351→          }
+   352→   352→        } else {
+   353→   353→          const fallback = fallbackCourses.find((c) => c.slug === slug);
+   354→   354→          if (fallback) {
+   355→   355→            setCourse(fallback);
+   356→   356→          } else {
+   357→   357→            setNotFound(true);
+   358→   358→          }
+   359→   359→        }
+   360→   360→      } catch {
+   361→   361→        const fallback = fallbackCourses.find((c) => c.slug === slug);
+   362→   362→        if (fallback) {
+   363→   363→          setCourse(fallback);
+   364→   364→        } else {
+   365→   365→          setNotFound(true);
+   366→   366→        }
+   367→   367→      } finally {
+   368→   368→        setLoading(false);
+   369→   369→      }
+   370→   370→    }
+   371→   371→    if (slug) {
+   372→   372→      fetchCourse();
+   373→   373→    }
+   374→   374→  }, [slug]);
+   375→   375→
+   376→   376→  // ─── Loading State ────────────────────────────────────────────────────
+   377→   377→  if (loading) {
+   378→   378→    return (
+   379→   379→      <div className="min-h-screen pt-28 pb-16 sm:pt-32 sm:pb-20">
+   380→   380→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   381→   381→          <div className="flex items-center gap-2 mb-6">
+   382→   382→            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+   383→   383→              <Loader2 className="h-5 w-5 animate-spin text-lta-green" />
+   384→   384→              Loading course details...
+   385→   385→            </div>
+   386→   386→          </div>
+   387→   387→        </div>
+   388→   388→      </div>
+   389→   389→    );
+   390→   390→  }
+   391→   391→
+   392→   392→  // ─── Not Found State ─────────────────────────────────────────────────
+   393→   393→  if (notFound || !course) {
+   394→   394→    return (
+   395→   395→      <div className="min-h-screen pt-28 pb-16 sm:pt-32 sm:pb-20">
+   396→   396→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+   397→   397→          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
+   398→   398→            <AlertTriangle className="h-16 w-16 text-amber-400 mx-auto mb-4" />
+   399→   399→            <h1 className="text-2xl font-bold text-foreground mb-2">Course Not Found</h1>
+   400→   400→            <p className="text-muted-foreground mb-6">The course you are looking for does not exist or has been removed.</p>
+   401→   401→            <Link href="/courses">
+   402→   402→              <Button className="bg-lta-green hover:bg-lta-green-dark text-white">
+   403→   403→                <ArrowLeft className="h-4 w-4 mr-2" />
+   404→   404→                Back to Courses
+   405→   405→              </Button>
+   406→   406→            </Link>
+   407→   407→          </motion.div>
+   408→   408→        </div>
+   409→   409→      </div>
+   410→   410→    );
+   411→   411→  }
+   412→   412→
+   413→   413→  const config = courseConfig[course.slug] || courseConfig['web-development-programming'];
+   414→   414→  const IconComp = config.icon;
+   415→   415→  const totalWeeks = course.modules.reduce((sum, mod) => sum + mod.weeks, 0);
+   416→   416→
+   417→   417→  // ─── Course Detail Layout ────────────────────────────────────────────
+   418→   418→  return (
+   419→   419→    <div className="min-h-screen">
+   420→   420→      {/* ─── Page Header ─────────────────────────────────────────── */}
+   421→   421→      <section className="relative pt-28 pb-12 sm:pt-32 sm:pb-16 overflow-hidden">
+   422→   422→        <div className="absolute inset-0 section-pattern opacity-40" />
+   423→   423→        <div className="absolute top-0 right-0 w-80 h-80 bg-lta-green/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+   424→   424→        <div className="absolute bottom-0 left-0 w-64 h-64 bg-lta-blue/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
+   425→   425→
+   426→   426→        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   427→   427→          <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
+   428→   428→            {/* Breadcrumb */}
+   429→   429→            <motion.div variants={fadeUp}>
+   430→   430→              <Breadcrumb>
+   431→   431→                <BreadcrumbList>
+   432→   432→                  <BreadcrumbItem>
+   433→   433→                    <BreadcrumbLink href="/" className="text-muted-foreground hover:text-lta-green">
+   434→   434→                      Home
+   435→   435→                    </BreadcrumbLink>
+   436→   436→                  </BreadcrumbItem>
+   437→   437→                  <BreadcrumbSeparator />
+   438→   438→                  <BreadcrumbItem>
+   439→   439→                    <BreadcrumbLink href="/courses" className="text-muted-foreground hover:text-lta-green">
+   440→   440→                      Courses
+   441→   441→                    </BreadcrumbLink>
+   442→   442→                  </BreadcrumbItem>
+   443→   443→                  <BreadcrumbSeparator />
+   444→   444→                  <BreadcrumbItem>
+   445→   445→                    <BreadcrumbPage className="text-lta-green font-semibold max-w-[200px] truncate">
+   446→   446→                      {course.title}
+   447→   447→                    </BreadcrumbPage>
+   448→   448→                  </BreadcrumbItem>
+   449→   449→                </BreadcrumbList>
+   450→   450→              </Breadcrumb>
+   451→   451→            </motion.div>
+   452→   452→
+   453→   453→            {/* Title & Badges */}
+   454→   454→            <motion.div variants={fadeUp} className="mt-6">
+   455→   455→              <div className="flex items-start gap-4">
+   456→   456→                <div className={`hidden sm:flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient} shadow-lg shrink-0`}>
+   457→   457→                  <IconComp className="h-8 w-8 text-white" />
+   458→   458→                </div>
+   459→   459→                <div>
+   460→   460→                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">
+   461→   461→                    {course.title}
+   462→   462→                  </h1>
+   463→   463→                  <div className="flex flex-wrap items-center gap-3 mt-3">
+   464→   464→                    <Badge className="bg-lta-green text-white border-0">{course.category}</Badge>
+   465→   465→                    <Badge variant="outline" className="border-border">{course.level}</Badge>
+   466→   466→                    <Badge variant="secondary" className="bg-lta-blue/10 text-lta-blue border-lta-blue/20">
+   467→   467→                      <Clock className="h-3 w-3 mr-1" />
+   468→   468→                      {course.duration}
+   469→   469→                    </Badge>
+   470→   470→                    <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+   471→   471→                      <BookOpen className="h-3 w-3 mr-1" />
+   472→   472→                      {totalWeeks} Weeks
+   473→   473→                    </Badge>
+   474→   474→                  </div>
+   475→   475→                </div>
+   476→   476→              </div>
+   477→   477→            </motion.div>
+   478→   478→          </motion.div>
+   479→   479→        </div>
+   480→   480→      </section>
+   481→   481→
+   482→   482→      {/* ─── Main Content & Sidebar ──────────────────────────────── */}
+   483→   483→      <section className="pb-16 sm:pb-20">
+   484→   484→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   485→   485→          <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+   486→   486→            {/* ─── Left: Main Content ────────────────────────────── */}
+   487→   487→            <div className="flex-1 min-w-0">
+   488→   488→              {/* Course Overview */}
+   489→   489→              <motion.div
+   490→   490→                initial="hidden"
+   491→   491→                whileInView="visible"
+   492→   492→                viewport={{ once: true, margin: '-60px' }}
+   493→   493→                variants={fadeUp}
+   494→   494→              >
+   495→   495→                <Card className="rounded-2xl border border-lta-green/10 overflow-hidden">
+   496→   496→                  <div className="h-1.5 bg-gradient-to-r from-lta-green to-lta-blue" />
+   497→   497→                  <CardHeader>
+   498→   498→                    <CardTitle className="text-xl font-bold flex items-center gap-2">
+   499→   499→                      <BarChart3 className="h-5 w-5 text-lta-green" />
+   500→   500→                      Course Overview
+   501→   501→                    </CardTitle>
+   502→   502→                  </CardHeader>
+   503→   503→                  <CardContent>
+   504→   504→                    <p className="text-muted-foreground leading-relaxed">{course.description}</p>
+   505→   505→                    {course.content && (
+   506→   506→                      <div className="mt-6 prose prose-sm max-w-none">
+   507→   507→                        {course.content.split('\n\n').map((paragraph, idx) => (
+   508→   508→                          <p key={idx} className="text-muted-foreground leading-relaxed mb-4">
+   509→   509→                            {paragraph}
+   510→   510→                          </p>
+   511→   511→                        ))}
+   512→   512→                      </div>
+   513→   513→                    )}
+   514→   514→                  </CardContent>
+   515→   515→                </Card>
+   516→   516→              </motion.div>
+   517→   517→
+   518→   518→              {/* What You Will Learn */}
+   519→   519→              <motion.div
+   520→   520→                initial="hidden"
+   521→   521→                whileInView="visible"
+   522→   522→                viewport={{ once: true, margin: '-60px' }}
+   523→   523→                variants={fadeUp}
+   524→   524→                className="mt-8"
+   525→   525→              >
+   526→   526→                <Card className="rounded-2xl border border-lta-green/10 overflow-hidden">
+   527→   527→                  <div className="h-1.5 bg-gradient-to-r from-emerald-400 to-lta-green" />
+   528→   528→                  <CardHeader>
+   529→   529→                    <CardTitle className="text-xl font-bold flex items-center gap-2">
+   530→   530→                      <CheckCircle2 className="h-5 w-5 text-lta-green" />
+   531→   531→                      What You Will Learn
+   532→   532→                    </CardTitle>
+   533→   533→                    <CardDescription>
+   534→   534→                      By the end of this course, you will be able to:
+   535→   535→                    </CardDescription>
+   536→   536→                  </CardHeader>
+   537→   537→                  <CardContent>
+   538→   538→                    <motion.ul
+   539→   539→                      initial="hidden"
+   540→   540→                      whileInView="visible"
+   541→   541→                      viewport={{ once: true }}
+   542→   542→                      variants={staggerContainer}
+   543→   543→                      className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+   544→   544→                    >
+   545→   545→                      {course.objectives.map((objective, idx) => (
+   546→   546→                        <motion.li
+   547→   547→                          key={idx}
+   548→   548→                          variants={staggerItem}
+   549→   549→                          className="flex items-start gap-3 text-sm text-foreground/80 p-3 rounded-lg hover:bg-lta-green/5 transition-colors"
+   550→   550→                        >
+   551→   551→                          <CheckCircle2 className="h-5 w-5 text-lta-green shrink-0 mt-0.5" />
+   552→   552→                          <span>{objective}</span>
+   553→   553→                        </motion.li>
+   554→   554→                      ))}
+   555→   555→                    </motion.ul>
+   556→   556→                  </CardContent>
+   557→   557→                </Card>
+   558→   558→              </motion.div>
+   559→   559→
+   560→   560→              {/* Course Curriculum / Modules */}
+   561→   561→              <motion.div
+   562→   562→                initial="hidden"
+   563→   563→                whileInView="visible"
+   564→   564→                viewport={{ once: true, margin: '-60px' }}
+   565→   565→                variants={fadeUp}
+   566→   566→                className="mt-8"
+   567→   567→              >
+   568→   568→                <Card className="rounded-2xl border border-lta-green/10 overflow-hidden">
+   569→   569→                  <div className="h-1.5 bg-gradient-to-r from-lta-blue to-indigo-500" />
+   570→   570→                  <CardHeader>
+   571→   571→                    <CardTitle className="text-xl font-bold flex items-center gap-2">
+   572→   572→                      <BookOpen className="h-5 w-5 text-lta-blue" />
+   573→   573→                      Course Curriculum
+   574→   574→                    </CardTitle>
+   575→   575→                    <CardDescription>
+   576→   576→                      {course.modules.length} modules · {totalWeeks} weeks of comprehensive training
+   577→   577→                    </CardDescription>
+   578→   578→                  </CardHeader>
+   579→   579→                  <CardContent>
+   580→   580→                    <Accordion type="single" collapsible className="w-full">
+   581→   581→                      {course.modules.map((module, idx) => (
+   582→   582→                        <AccordionItem
+   583→   583→                          key={idx}
+   584→   584→                          value={`module-${idx}`}
+   585→   585→                          className="border-border/60"
+   586→   586→                        >
+   587→   587→                          <AccordionTrigger className="hover:no-underline py-4">
+   588→   588→                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-left">
+   589→   589→                              <div className="flex items-center gap-3">
+   590→   590→                                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-lta-green to-lta-blue text-white text-xs font-bold shrink-0">
+   591→   591→                                  {idx + 1}
+   592→   592→                                </span>
+   593→   593→                                <span className="font-semibold text-foreground text-sm sm:text-base">
+   594→   594→                                  {module.name}
+   595→   595→                                </span>
+   596→   596→                              </div>
+   597→   597→                              <span className="flex items-center gap-1.5 text-xs text-muted-foreground sm:ml-auto">
+   598→   598→                                <Clock className="h-3.5 w-3.5" />
+   599→   599→                                {module.weeks} week{module.weeks > 1 ? 's' : ''}
+   600→   600→                              </span>
+   601→   601→                            </div>
+   602→   602→                          </AccordionTrigger>
+   603→   603→                          <AccordionContent>
+   604→   604→                            <div className="pl-0 sm:pl-11 space-y-3 pb-2">
+   605→   605→                              <p className="text-sm text-muted-foreground">
+   606→   606→                                {module.description}
+   607→   607→                              </p>
+   608→   608→                              <ul className="space-y-2">
+   609→   609→                                {module.topics.map((topic, topicIdx) => (
+   610→   610→                                  <li
+   611→   611→                                    key={topicIdx}
+   612→   612→                                    className="flex items-center gap-2.5 text-sm text-foreground/80"
+   613→   613→                                  >
+   614→   614→                                    <div className="h-1.5 w-1.5 rounded-full bg-lta-green shrink-0" />
+   615→   615→                                    {topic}
+   616→   616→                                  </li>
+   617→   617→                                ))}
+   618→   618→                              </ul>
+   619→   619→                            </div>
+   620→   620→                          </AccordionContent>
+   621→   621→                        </AccordionItem>
+   622→   622→                      ))}
+   623→   623→                    </Accordion>
+   624→   624→                  </CardContent>
+   625→   625→                </Card>
+   626→   626→              </motion.div>
+   627→   627→            </div>
+   628→   628→
+   629→   629→            {/* ─── Right: Sidebar ─────────────────────────────────── */}
+   630→   630→            <motion.div
+   631→   631→              initial={{ opacity: 0, x: 20 }}
+   632→   632→              animate={{ opacity: 1, x: 0 }}
+   633→   633→              transition={{ duration: 0.5, delay: 0.3 }}
+   634→   634→              className="w-full lg:w-[340px] shrink-0"
+   635→   635→            >
+   636→   636→              <div className="lg:sticky lg:top-28">
+   637→   637→                {/* Pricing Card */}
+   638→   638→                <Card className="rounded-2xl border border-lta-green/10 shadow-lg overflow-hidden">
+   639→   639→                  <div className="h-2 bg-gradient-to-r from-lta-green to-lta-blue" />
+   640→   640→                  <CardContent className="p-6 space-y-5">
+   641→   641→                    {/* Price */}
+   642→   642→                    <div className="text-center">
+   643→   643→                      <p className="text-sm text-muted-foreground">Course Fee</p>
+   644→   644→                      <p className="text-4xl font-bold gradient-text mt-1">
+   645→   645→                        {course.currency}{course.price.toLocaleString()}
+   646→   646→                      </p>
+   647→   647→                      <p className="text-xs text-muted-foreground mt-1">{course.duration}</p>
+   648→   648→                    </div>
+   649→   649→
+   650→   650→                    <Separator />
+   651→   651→
+   652→   652→                    {/* Details */}
+   653→   653→                    <div className="space-y-3">
+   654→   654→                      <div className="flex items-center justify-between text-sm">
+   655→   655→                        <span className="text-muted-foreground flex items-center gap-2">
+   656→   656→                          <Clock className="h-4 w-4 text-lta-green" />
+   657→   657→                          Duration
+   658→   658→                        </span>
+   659→   659→                        <span className="font-semibold text-foreground">{course.duration}</span>
+   660→   660→                      </div>
+   661→   661→                      <div className="flex items-center justify-between text-sm">
+   662→   662→                        <span className="text-muted-foreground flex items-center gap-2">
+   663→   663→                          <BarChart3 className="h-4 w-4 text-lta-green" />
+   664→   664→                          Level
+   665→   665→                        </span>
+   666→   666→                        <span className="font-semibold text-foreground">{course.level}</span>
+   667→   667→                      </div>
+   668→   668→                      <div className="flex items-center justify-between text-sm">
+   669→   669→                        <span className="text-muted-foreground flex items-center gap-2">
+   670→   670→                          <BookOpen className="h-4 w-4 text-lta-green" />
+   671→   671→                          Modules
+   672→   672→                        </span>
+   673→   673→                        <span className="font-semibold text-foreground">{course.modules.length} Modules</span>
+   674→   674→                      </div>
+   675→   675→                      <div className="flex items-center justify-between text-sm">
+   676→   676→                        <span className="text-muted-foreground flex items-center gap-2">
+   677→   677→                          <GraduationCap className="h-4 w-4 text-lta-green" />
+   678→   678→                          Registration
+   679→   679→                        </span>
+   680→   680→                        <span className="font-semibold text-lta-green">M300</span>
+   681→   681→                      </div>
+   682→   682→                    </div>
+   683→   683→
+   684→   684→                    <Separator />
+   685→   685→
+   686→   686→                    {/* Payment Methods */}
+   687→   687→                    <div>
+   688→   688→                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+   689→   689→                        Payment Methods
+   690→   690→                      </p>
+   691→   691→                      <div className="grid grid-cols-3 gap-2">
+   692→   692→                        <div className="flex flex-col items-center gap-1.5 rounded-lg bg-lta-green/5 p-2.5 border border-lta-green/10">
+   693→   693→                          <Smartphone className="h-4 w-4 text-lta-green" />
+   694→   694→                          <span className="text-xs font-medium text-foreground">M-Pesa</span>
+   695→   695→                        </div>
+   696→   696→                        <div className="flex flex-col items-center gap-1.5 rounded-lg bg-lta-blue/5 p-2.5 border border-lta-blue/10">
+   697→   697→                          <Smartphone className="h-4 w-4 text-lta-blue" />
+   698→   698→                          <span className="text-xs font-medium text-foreground">EcoCash</span>
+   699→   699→                        </div>
+   700→   700→                        <div className="flex flex-col items-center gap-1.5 rounded-lg bg-amber-50 p-2.5 border border-amber-200">
+   701→   701→                          <Building2 className="h-4 w-4 text-amber-600" />
+   702→   702→                          <span className="text-xs font-medium text-foreground">Bank</span>
+   703→   703→                        </div>
+   704→   704→                      </div>
+   705→   705→                    </div>
+   706→   706→
+   707→   707→                    <Separator />
+   708→   708→
+   709→   709→                    {/* CTA */}
+   710→   710→                    <Link href="/admissions" className="block">
+   711→   711→                      <Button
+   712→   712→                        size="lg"
+   713→   713→                        className="w-full bg-lta-green hover:bg-lta-green-dark text-white btn-glow-green font-semibold text-base"
+   714→   714→                      >
+   715→   715→                        <GraduationCap className="h-5 w-5 mr-2" />
+   716→   716→                        Apply for This Course
+   717→   717→                      </Button>
+   718→   718→                    </Link>
+   719→   719→
+   720→   720→                    <Link href="/courses" className="block">
+   721→   721→                      <Button
+   722→   722→                        variant="ghost"
+   723→   723→                        className="w-full text-muted-foreground hover:text-lta-green"
+   724→   724→                      >
+   725→   725→                        <ArrowLeft className="h-4 w-4 mr-2" />
+   726→   726→                        Back to Courses
+   727→   727→                      </Button>
+   728→   728→                    </Link>
+   729→   729→                  </CardContent>
+   730→   730→                </Card>
+   731→   731→
+   732→   732→                {/* Quick Info Card */}
+   733→   733→                <motion.div
+   734→   734→                  initial={{ opacity: 0, y: 10 }}
+   735→   735→                  animate={{ opacity: 1, y: 0 }}
+   736→   736→                  transition={{ duration: 0.4, delay: 0.5 }}
+   737→   737→                >
+   738→   738→                  <Card className="mt-4 rounded-2xl border border-lta-green/10 bg-gradient-to-br from-lta-green/5 to-lta-blue/5">
+   739→   739→                    <CardContent className="p-4">
+   740→   740→                      <div className="flex items-start gap-3">
+   741→   741→                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-lta-green/10 shrink-0">
+   742→   742→                          <IconComp className="h-5 w-5 text-lta-green" />
+   743→   743→                        </div>
+   744→   744→                        <div>
+   745→   745→                          <p className="text-sm font-semibold text-foreground">{course.category} Program</p>
+   746→   746→                          <p className="text-xs text-muted-foreground mt-0.5">
+   747→   747→                            {totalWeeks} weeks · {course.modules.length} modules · Hands-on projects included
+   748→   748→                          </p>
+   749→   749→                        </div>
+   750→   750→                      </div>
+   751→   751→                    </CardContent>
+   752→   752→                  </Card>
+   753→   753→                </motion.div>
+   754→   754→              </div>
+   755→   755→            </motion.div>
+   756→   756→          </div>
+   757→   757→        </div>
+   758→   758→      </section>
+   759→   759→    </div>
+   760→   760→  );
+   761→   761→}
+   762→   762→
