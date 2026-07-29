@@ -494,8 +494,9 @@ export default function HomePage() {
 
                   {/* Content */}
                   <div className="flex-1 text-center lg:text-left">
-                    <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
-                      Students Win Big at LSMTA Science Fair 2026
+                    <h3 className="text-xl sm:text-2xl font-bold mb-2">
+                      <span className="text-lta-green">Millicent Academy</span>{' '}
+                      <span className="text-foreground">Students Claim Top Prizes at LSMTA Fair 2026</span>
                     </h3>
                     <p className="text-muted-foreground leading-relaxed mb-5">
                       An instructor at <strong className="text-foreground">Lesotho Tech Academy</strong> mentored three students from{' '}

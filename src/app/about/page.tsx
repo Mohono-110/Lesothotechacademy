@@ -383,7 +383,7 @@ export default function AboutPage() {
                     <div>
                       <h4 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
                         <Award className="h-5 w-5 text-amber-500" />
-                        LSMTA Science Fair 2026
+                        Millicent Academy at LSMTA Fair 2026
                       </h4>
                       <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 rounded-xl p-4 border border-amber-200/50 dark:border-amber-800/30">
                         <p className="text-sm text-foreground leading-relaxed">
@@ -571,8 +571,9 @@ export default function AboutPage() {
                     </div>
                   </div>
                   <div className="flex-1 text-center md:text-left">
-                    <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
-                      Students Win Big at LSMTA Science Fair 2026
+                    <h3 className="text-xl sm:text-2xl font-bold mb-2">
+                      <span className="text-lta-green">Millicent Academy</span>{' '}
+                      <span className="text-foreground">Students Claim Top Prizes at LSMTA Fair 2026</span>
                     </h3>
                     <p className="text-muted-foreground leading-relaxed text-sm sm:text-base mb-4">
                       An instructor at <strong>Lesotho Tech Academy</strong> mentored three students from{' '}

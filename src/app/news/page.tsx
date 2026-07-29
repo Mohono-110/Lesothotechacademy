@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/breadcrumb';
 
 const featuredArticle = {
-  title: 'Lesotho Tech Academy Students Win Big at LSMTA Science Fair 2026',
+  title: 'Millicent Academy Students Claim Top Prizes at LSMTA Fair 2026',
   date: '24 July 2026',
   category: 'Achievement',
   icon: Trophy,
@@ -47,7 +47,7 @@ Out of the three students who competed in the Technology Category, two qualified
 
 This achievement is a testament to the quality of mentorship and IT education provided at Lesotho Tech Academy. Our comprehensive curriculum in Web Development, Computer Networks, and CMS Development empowers young Basotho learners to compete at the highest levels in science and technology.
 
-We extend our heartfelt congratulations to these remarkable students and their dedicated instructor. Their success inspires us to continue our mission of bridging the technology gap in Lesotho through accessible, high-quality IT education.`,
+We extend our heartfelt congratulations to these remarkable students from Millicent Academy Junior School and their dedicated instructor from Lesotho Tech Academy. Their success inspires us to continue our mission of bridging the technology gap in Lesotho through accessible, high-quality IT education.`,
   link: 'https://millicentacademy.co.ls',
 };
 
