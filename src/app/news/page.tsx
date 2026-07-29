@@ -38,16 +38,16 @@ import {
 
 const featuredArticle = {
   title: 'Lesotho Tech Academy Students Win Big at LSMTA Science Fair 2026',
-  date: '15 March 2026',
+  date: '24 July 2026',
   category: 'Achievement',
   icon: Trophy,
-  content: `We are thrilled to announce that three talented students from Lesotho Tech Academy, representing Millicent Academy Junior School, have achieved outstanding results at the Lesotho Science, Mathematics, and Technology Association (LSMTA) Science Fair 2026.
+  content: `We are thrilled to announce that an instructor at Lesotho Tech Academy mentored three students from Millicent Academy Junior School for the Lesotho Science, Mathematics, and Technology Association (LSMTA) Science Fair 2026, held from 22nd to 24th July 2026.
 
-Our students showcased exceptional innovation in the Technology Category, securing both 1st Prize and 2nd Prize positions. Their projects demonstrated remarkable creativity, technical skill, and problem-solving abilities that impressed the judges and stood out among numerous competitors from across the country.
+Out of the three students who competed in the Technology Category, two qualified at the national level — securing both 1st Prize and 2nd Prize positions. Their projects demonstrated remarkable creativity, technical skill, and problem-solving abilities that impressed the judges and stood out among numerous competitors from across the country.
 
-This achievement is a testament to the quality of IT education provided at Lesotho Tech Academy. Our comprehensive curriculum in Web Development, Computer Networks, and CMS Development empowers young Basotho learners to compete at the highest levels in science and technology.
+This achievement is a testament to the quality of mentorship and IT education provided at Lesotho Tech Academy. Our comprehensive curriculum in Web Development, Computer Networks, and CMS Development empowers young Basotho learners to compete at the highest levels in science and technology.
 
-We extend our heartfelt congratulations to these remarkable students and their dedicated instructors. Their success inspires us to continue our mission of bridging the technology gap in Lesotho through accessible, high-quality IT education.`,
+We extend our heartfelt congratulations to these remarkable students and their dedicated instructor. Their success inspires us to continue our mission of bridging the technology gap in Lesotho through accessible, high-quality IT education.`,
   link: 'https://millicentacademy.co.ls',
 };
 

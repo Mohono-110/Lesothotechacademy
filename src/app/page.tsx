@@ -498,8 +498,7 @@ export default function HomePage() {
                       Students Win Big at LSMTA Science Fair 2026
                     </h3>
                     <p className="text-muted-foreground leading-relaxed mb-5">
-                      Three talented students from{' '}
-                      <strong className="text-foreground">Lesotho Tech Academy</strong>, representing{' '}
+                      An instructor at <strong className="text-foreground">Lesotho Tech Academy</strong> mentored three students from{' '}
                       <a
                         href="https://millicentacademy.co.ls"
                         target="_blank"
@@ -507,8 +506,7 @@ export default function HomePage() {
                         className="text-lta-blue hover:text-lta-blue-dark underline underline-offset-2 decoration-lta-blue/40 hover:decoration-lta-blue transition-colors font-medium"
                       >
                         Millicent Academy Junior School
-                      </a>, achieved outstanding results at the{' '}
-                      <strong className="text-foreground">Lesotho Science, Mathematics, and Technology Association (LSMTA) Science Fair 2026</strong>, competing in the Technology Category:
+                      </a> for the <strong className="text-foreground">LSMTA Science and Mathematics Fair 2026</strong> (22nd–24th July). Of the three who competed, <strong className="text-foreground">two qualified</strong> at the national level:
                     </p>
 
                     {/* Prize Badges */}
