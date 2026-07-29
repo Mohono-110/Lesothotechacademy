@@ -353,7 +353,7 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
   const IconComp = config.icon;
 
   return (
-    <Card className="group relative overflow-hidden rounded-2xl border border-lta-green/10 bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:shadow-lta-green/5 hover:-translate-y-1">
+    <Card className="group relative flex flex-col overflow-hidden rounded-2xl border border-lta-green/10 bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:shadow-lta-green/5 hover:-translate-y-1 h-full">
         {/* Gradient Top Bar */}
         <div className={`h-2 bg-gradient-to-r ${config.gradient}`} />
 
@@ -386,7 +386,7 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4 pb-2">
+        <CardContent className="space-y-4 pb-2 flex-1">
           <CardDescription className="text-sm leading-relaxed">
             {course.description}
           </CardDescription>
@@ -410,12 +410,12 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
           <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 border border-amber-200">
             <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
             <span className="text-xs text-amber-700 font-medium">
-              M300 registration fee & Certificate fee M700
+              M300 registration fee & M700 Certificate fee
             </span>
           </div>
         </CardContent>
 
-        <CardFooter className="flex gap-3 pt-2">
+        <CardFooter className="flex gap-3 pt-2 mt-auto">
           <Button asChild variant="outline" className="flex-1 border-lta-green/30 text-lta-green hover:bg-lta-green hover:text-white transition-all">
               <Link href={`/courses/${course.slug}`}>
                 View Full Details
@@ -617,10 +617,10 @@ export default function CoursesPage() {
             <Card className="rounded-2xl border border-lta-green/10 shadow-lg overflow-hidden">
               <div className="h-1.5 bg-gradient-to-r from-lta-green to-lta-blue" />
               <CardContent className="p-6 sm:p-8">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 place-items-center max-w-2xl mx-auto">
                   {/* Registration Fee */}
-                  <div className="rounded-xl bg-lta-green/5 border border-lta-green/10 p-5">
-                    <div className="flex items-center gap-3 mb-3">
+                  <div className="rounded-xl bg-lta-green/5 border border-lta-green/10 p-5 w-full text-center">
+                    <div className="flex items-center justify-center gap-3 mb-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-lta-green text-white">
                         <GraduationCap className="h-5 w-5" />
                       </div>
@@ -635,8 +635,8 @@ export default function CoursesPage() {
                   </div>
 
                   {/* Certificate Fee */}
-                  <div className="rounded-xl bg-amber-50 border border-amber-200 p-5">
-                    <div className="flex items-center gap-3 mb-3">
+                  <div className="rounded-xl bg-amber-50 border border-amber-200 p-5 w-full text-center">
+                    <div className="flex items-center justify-center gap-3 mb-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-600 text-white">
                         <Award className="h-5 w-5" />
                       </div>
@@ -651,14 +651,14 @@ export default function CoursesPage() {
                   </div>
 
                   {/* Payment Methods */}
-                  <div className="rounded-xl bg-lta-blue/5 border border-lta-blue/10 p-5 sm:col-span-3">
-                    <div className="flex items-center gap-3 mb-3">
+                  <div className="rounded-xl bg-lta-blue/5 border border-lta-blue/10 p-5 w-full sm:col-span-2 text-center">
+                    <div className="flex items-center justify-center gap-3 mb-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-lta-blue text-white">
                         <Smartphone className="h-5 w-5" />
                       </div>
                       <p className="text-sm font-semibold text-foreground">Payment Methods</p>
                     </div>
-                    <ul className="space-y-2">
+                    <ul className="space-y-2 flex flex-col items-center">
                       <li className="flex items-center gap-2 text-sm text-foreground/80">
                         <div className="h-2 w-2 rounded-full bg-lta-green" />
                         <span className="font-medium">M-Pesa</span>
