@@ -383,11 +383,11 @@ export default function AboutPage() {
                     <div>
                       <h4 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
                         <Award className="h-5 w-5 text-amber-500" />
-                        Mentoring Achievement
+                        LSMTA Science Fair 2026
                       </h4>
                       <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 rounded-xl p-4 border border-amber-200/50 dark:border-amber-800/30">
                         <p className="text-sm text-foreground leading-relaxed">
-                          Mentored <strong>3 students</strong> from{' '}
+                          Three talented students from <strong>Lesotho Tech Academy</strong>, representing{' '}
                           <a
                             href="https://millicentacademy.co.ls"
                             target="_blank"
@@ -396,8 +396,7 @@ export default function AboutPage() {
                           >
                             Millicent Academy Junior School
                             <ExternalLink className="h-3 w-3" />
-                          </a>{' '}
-                          for the LSMTA Science Fair 2026 (Technology Category), securing{' '}
+                          </a>, achieved outstanding results at the <strong>Lesotho Science, Mathematics, and Technology Association (LSMTA) Science Fair 2026</strong>. They showcased exceptional innovation in the Technology Category, securing{' '}
                           <strong className="text-amber-600">1st Prize</strong> and{' '}
                           <strong className="text-slate-500">2nd Prize</strong> at the{' '}
                           <strong>National Level</strong>.
@@ -573,11 +572,10 @@ export default function AboutPage() {
                   </div>
                   <div className="flex-1 text-center md:text-left">
                     <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
-                      Partnering for Excellence
+                      Students Win Big at LSMTA Science Fair 2026
                     </h3>
                     <p className="text-muted-foreground leading-relaxed text-sm sm:text-base mb-4">
-                      Our success at the LSMTA Science Fair 2026 was made possible through
-                      collaboration with{' '}
+                      Three talented students from <strong>Lesotho Tech Academy</strong>, representing{' '}
                       <a
                         href="https://millicentacademy.co.ls"
                         target="_blank"
@@ -586,10 +584,8 @@ export default function AboutPage() {
                       >
                         Millicent Academy Junior School
                         <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                      . Together, we proved that with the right mentorship and dedication,
-                      Basotho students can achieve extraordinary results in technology at the
-                      national level.
+                      </a>, achieved outstanding results at the Lesotho Science, Mathematics, and Technology Association (LSMTA) Science Fair 2026. They showcased exceptional innovation in the Technology Category, securing both 1st Prize and 2nd Prize positions.
+                      Their success inspires us to continue our mission of bridging the technology gap in Lesotho through accessible, high-quality IT education.
                     </p>
                     <a
                       href="https://millicentacademy.co.ls"

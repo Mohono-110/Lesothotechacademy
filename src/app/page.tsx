@@ -495,10 +495,11 @@ export default function HomePage() {
                   {/* Content */}
                   <div className="flex-1 text-center lg:text-left">
                     <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
-                      LSMTA Science Fair 2026
+                      Students Win Big at LSMTA Science Fair 2026
                     </h3>
                     <p className="text-muted-foreground leading-relaxed mb-5">
-                      Our founder mentored <strong className="text-foreground">3 students</strong> from{' '}
+                      Three talented students from{' '}
+                      <strong className="text-foreground">Lesotho Tech Academy</strong>, representing{' '}
                       <a
                         href="https://millicentacademy.co.ls"
                         target="_blank"
@@ -506,9 +507,8 @@ export default function HomePage() {
                         className="text-lta-blue hover:text-lta-blue-dark underline underline-offset-2 decoration-lta-blue/40 hover:decoration-lta-blue transition-colors font-medium"
                       >
                         Millicent Academy Junior School
-                      </a>{' '}
-                      for the LSMTA Science Fair 2026, competing in the Technology Category.
-                      The students achieved outstanding results at the <strong className="text-foreground">National Level</strong>:
+                      </a>, achieved outstanding results at the{' '}
+                      <strong className="text-foreground">Lesotho Science, Mathematics, and Technology Association (LSMTA) Science Fair 2026</strong>, competing in the Technology Category:
                     </p>
 
                     {/* Prize Badges */}
@@ -525,8 +525,9 @@ export default function HomePage() {
                     </div>
 
                     <p className="text-sm text-muted-foreground">
-                      This achievement demonstrates our commitment to practical mentorship and
-                      the power of quality technology education in transforming young lives in Lesotho.
+                      This achievement is a testament to the quality of IT education at Lesotho Tech Academy.
+                      Our curriculum in Web Development, Computer Networks, and CMS Development empowers young
+                      Basotho learners to compete at the highest levels in science and technology.
                     </p>
                   </div>
                 </div>
