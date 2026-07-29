@@ -242,12 +242,9 @@ export default function AboutPage() {
                     <Target className="h-7 w-7" />
                   </div>
                   <h3 className="text-xl font-bold text-foreground">Our Mission</h3>
-                  <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                  <p className="text-muted-foreground leading-relaxed text-sm sm:text-base text-justify">
                     To provide high-quality, practical, and affordable IT education that empowers
                     individuals in Lesotho with the skills needed to succeed in the digital economy.
-                    We are committed to bridging the technology skills gap through hands-on training,
-                    mentorship, and industry-relevant curriculum that prepares our students for
-                    immediate employment and entrepreneurial success.
                   </p>
                 </CardContent>
               </Card>
@@ -262,13 +259,10 @@ export default function AboutPage() {
                     <Eye className="h-7 w-7" />
                   </div>
                   <h3 className="text-xl font-bold text-foreground">Our Vision</h3>
-                  <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                  <p className="text-muted-foreground leading-relaxed text-sm sm:text-base text-justify">
                     To become the leading technology training institution in Lesotho and the broader
                     Southern African region, recognised for producing highly skilled, innovative,
-                    and job-ready graduates. We envision a future where every young person in
-                    Lesotho has access to world-class technology education, enabling them to build
-                    solutions that transform their communities and contribute to the nation&apos;s
-                    technological advancement.
+                    and job-ready graduates.
                   </p>
                 </CardContent>
               </Card>
