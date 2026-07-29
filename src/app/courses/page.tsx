@@ -293,7 +293,7 @@ const courseConfig: Record<
     gradientFrom: 'bg-emerald-500',
     gradientTo: 'bg-cyan-500',
     accentBg: 'bg-emerald-50 border-emerald-100',
-    topics: ['HTML5 & CSS3', 'JavaScript & TypeScript', 'React & Node.js', 'Database Design', 'Git & Deployment'],
+    topics: ['HTML5 & CSS3', 'JavaScript', 'Database Design', 'Git & Deployment'],
   },
   'computer-networks': {
     icon: Network,
