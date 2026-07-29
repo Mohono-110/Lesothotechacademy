@@ -642,7 +642,7 @@ export default function AboutPage() {
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="border-2 border-white/30 text-white hover:bg-white/10 hover:text-white text-base px-8 py-6 rounded-xl backdrop-blur-sm">
+                <Button asChild size="lg" variant="outline" className="bg-transparent border-2 border-white/30 text-white hover:bg-white/10 hover:text-white text-base px-8 py-6 rounded-xl backdrop-blur-sm">
                   <Link href="/courses">
                     <BookOpen className="h-5 w-5 mr-2" />
                     Browse Courses

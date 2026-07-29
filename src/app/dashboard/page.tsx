@@ -504,7 +504,7 @@ export default function DashboardPage() {
                 <BookOpen className="h-4 w-4" /> Apply for Course
               </Link>
             </Button>
-            <Button asChild size="sm" variant="outline" className="border-white/30 text-white hover:bg-white/10 gap-1.5">
+            <Button asChild size="sm" variant="outline" className="bg-transparent border-white/30 text-white hover:bg-white/10 gap-1.5">
               <Link href="/courses">
                 Browse Courses
               </Link>
