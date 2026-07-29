@@ -410,7 +410,7 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
           <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 border border-amber-200">
             <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
             <span className="text-xs text-amber-700 font-medium">
-              M300 registration fee applies
+              M300 registration fee & Certificate fee M700
             </span>
           </div>
         </CardContent>
