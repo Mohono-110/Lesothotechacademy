@@ -296,15 +296,19 @@ export default function AboutPage() {
                 <div className="grid md:grid-cols-[280px_1fr] lg:grid-cols-[320px_1fr] gap-0">
                   {/* Profile Card */}
                   <div className="bg-gradient-to-br from-lta-green to-lta-blue p-8 sm:p-10 flex flex-col items-center justify-center text-center">
-                    {/* Initials Circle */}
+                    {/* Founder Photo */}
                     <motion.div
-                      animate={{ scale: [1, 1.03, 1] }}
+                      animate={{ scale: [1, 1.02, 1] }}
                       transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                      className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-white/15 backdrop-blur-sm border-2 border-white/25 flex items-center justify-center mb-5 shadow-xl"
+                      className="relative mb-5"
                     >
-                      <span className="text-3xl sm:text-4xl font-bold text-white tracking-wide">
-                        RJM
-                      </span>
+                      <div className="w-40 h-40 sm:w-44 sm:h-44 lg:w-48 lg:h-48 rounded-full overflow-hidden border-4 border-white/25 shadow-2xl">
+                        <img
+                          src="/founder.jpg"
+                          alt="Relebohile Joseph Mohono — Founder & CEO of Lesotho Tech Academy"
+                          className="w-full h-full object-cover object-top"
+                        />
+                      </div>
                     </motion.div>
 
                     <h3 className="text-xl font-bold text-white mb-1">
