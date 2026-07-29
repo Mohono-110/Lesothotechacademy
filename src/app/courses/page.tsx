@@ -352,8 +352,7 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
   const IconComp = config.icon;
 
   return (
-    <motion.div variants={itemVariants}>
-      <Card className="group relative overflow-hidden rounded-2xl border border-lta-green/10 bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:shadow-lta-green/5 hover:-translate-y-1">
+    <Card className="group relative overflow-hidden rounded-2xl border border-lta-green/10 bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:shadow-lta-green/5 hover:-translate-y-1">
         {/* Gradient Top Bar */}
         <div className={`h-2 bg-gradient-to-r ${config.gradient}`} />
 
@@ -430,7 +429,6 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
             </Button>
         </CardFooter>
       </Card>
-    </motion.div>
   );
 }
 
@@ -443,7 +441,10 @@ export default function CoursesPage() {
   useEffect(() => {
     async function fetchCourses() {
       try {
-        const res = await fetch('/api/courses');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const res = await fetch('/api/courses', { signal: controller.signal });
+        clearTimeout(timeoutId);
         if (res.ok) {
           const data = await res.json();
           if (data.courses && data.courses.length > 0) {
@@ -537,10 +538,10 @@ export default function CoursesPage() {
       <section className="py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true, margin: '-80px' }}
-            variants={containerVariants}
+            transition={{ duration: 0.5 }}
             className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8"
           >
             {loading
@@ -579,7 +580,15 @@ export default function CoursesPage() {
                   </Card>
                 ))
               : courses.map((course, index) => (
-                  <CourseCard key={course.slug} course={course} index={index} />
+                  <motion.div
+                    key={course.slug}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <CourseCard course={course} index={index} />
+                  </motion.div>
                 ))}
           </motion.div>
         </div>
