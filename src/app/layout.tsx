@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     title: "Lesotho Tech Academy | Learn Code Innovate",
     description:
       "Premier IT training institution in Lesotho. Web Development, CMS, Computer Networks & Business Development Systems. Register for M300.",
-    url: "https://lesothotechacademy.com",
+    url: "https://www.lesothotechacademy.org",
     siteName: "Lesotho Tech Academy",
     type: "website",
     locale: "en_LS",

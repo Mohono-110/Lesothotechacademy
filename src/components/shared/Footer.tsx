@@ -99,8 +99,8 @@ export default function Footer() {
               </li>
               <li className="flex items-start gap-3">
                 <Globe className="h-4 w-4 text-lta-green shrink-0 mt-0.5" />
-                <a href="https://lesothotechacademy.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-lta-green transition-colors">
-                  lesothotechacademy.com
+                <a href="https://www.lesothotechacademy.org" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-lta-green transition-colors">
+                  www.lesothotechacademy.org
                 </a>
               </li>
             </ul>

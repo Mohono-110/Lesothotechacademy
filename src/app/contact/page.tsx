@@ -71,7 +71,7 @@ const contactInfo = [
   {
     icon: Globe,
     title: 'Website',
-    value: 'lesothotechacademy.com',
+    value: 'www.lesothotechacademy.org',
     color: 'bg-lta-blue/10 text-lta-blue',
   },
   {
