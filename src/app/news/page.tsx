@@ -181,48 +181,101 @@ export default function NewsPage() {
       </section>
 
       {/* Featured Article */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
+          className="relative"
         >
-          <Card className="overflow-hidden border-2 border-yellow-400/40 bg-gradient-to-br from-yellow-50/50 via-amber-50/30 to-orange-50/50 shadow-lg">
-            <CardHeader className="pb-0">
-              <div className="flex flex-wrap items-center gap-3 mb-3">
-                <Badge className="bg-yellow-500 text-white hover:bg-yellow-600 px-3 py-1">
-                  <Star className="h-3 w-3 mr-1" />
-                  Featured
-                </Badge>
-                <Badge variant="outline" className="border-yellow-500/30 text-yellow-700">
-                  <Calendar className="h-3 w-3 mr-1" />
-                  {featuredArticle.date}
-                </Badge>
-              </div>
-              <CardTitle className="text-xl sm:text-2xl lg:text-3xl text-foreground flex items-start gap-3">
-                <Trophy className="h-8 w-8 text-yellow-500 shrink-0 mt-1" />
-                <span>{featuredArticle.title}</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="prose prose-sm sm:prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-line">
-                {featuredArticle.content.split('\n\n').map((paragraph, i) => (
-                  <p key={i} className="mb-3">{paragraph}</p>
-                ))}
-              </div>
-              <div className="mt-6 pt-4 border-t border-yellow-400/20">
-                <a
-                  href={featuredArticle.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-lta-blue hover:text-lta-blue-dark font-medium transition-colors"
+          {/* Featured Label */}
+          <div className="flex items-center gap-2 mb-6">
+            <div className="h-px flex-1 bg-gradient-to-r from-yellow-400/60 to-transparent" />
+            <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white hover:from-yellow-600 hover:to-amber-600 px-4 py-1.5 text-xs font-semibold tracking-wide uppercase shadow-sm">
+              <Star className="h-3 w-3 mr-1.5" />
+              Featured Story
+            </Badge>
+            <div className="h-px flex-1 bg-gradient-to-l from-yellow-400/60 to-transparent" />
+          </div>
+
+          {/* Main Featured Card */}
+          <Card className="overflow-hidden border-0 shadow-2xl shadow-yellow-900/10">
+            <div className="grid lg:grid-cols-[340px_1fr]">
+              {/* Left Visual Panel */}
+              <div className="relative bg-gradient-to-br from-lta-green via-lta-green to-lta-blue p-8 sm:p-10 flex flex-col items-center justify-center text-center min-h-[320px] lg:min-h-[480px]">
+                {/* Decorative elements */}
+                <div className="absolute top-0 left-0 w-24 h-24 bg-white/5 rounded-br-[60px]" />
+                <div className="absolute bottom-0 right-0 w-32 h-32 bg-white/5 rounded-tl-[80px]" />
+
+                {/* Trophy & Achievement Visual */}
+                <motion.div
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  className="relative mb-6"
                 >
-                  Visit Millicent Academy
-                  <ArrowRight className="h-4 w-4" />
-                </a>
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-white/15 backdrop-blur-sm border-2 border-white/25 flex items-center justify-center shadow-xl">
+                    <Trophy className="h-14 w-14 sm:h-16 sm:w-16 text-yellow-300 drop-shadow-lg" />
+                  </div>
+                  {/* Floating medals */}
+                  <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center shadow-lg animate-pulse">
+                    <span className="text-white text-xs font-black">#1</span>
+                  </div>
+                  <div className="absolute -bottom-1 -right-4 w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center shadow-lg">
+                    <span className="text-gray-700 text-xs font-bold">#2</span>
+                  </div>
+                </motion.div>
+
+                <h3 className="text-white font-bold text-lg sm:text-xl mb-2">LSMTA Fair 2026</h3>
+                <p className="text-white/70 text-sm">22nd – 24th July</p>
+
+                <div className="mt-6 flex items-center gap-3">
+                  <Badge className="bg-white/15 text-white border-white/20 backdrop-blur-sm text-xs">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    {featuredArticle.date}
+                  </Badge>
+                  <Badge className="bg-yellow-400/20 text-yellow-200 border-yellow-400/20 backdrop-blur-sm text-xs">
+                    {featuredArticle.category}
+                  </Badge>
+                </div>
               </div>
-            </CardContent>
+
+              {/* Right Content Panel */}
+              <div className="p-6 sm:p-8 lg:p-10 xl:p-12 flex flex-col justify-center">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight mb-6">
+                  {featuredArticle.title}
+                </h2>
+
+                <div className="space-y-4 text-muted-foreground text-sm sm:text-base leading-relaxed text-justify mb-8">
+                  {featuredArticle.content.split('\n\n').map((paragraph, i) => (
+                    <p key={i}>{paragraph}</p>
+                  ))}
+                </div>
+
+                {/* CTA and stats */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pt-6 border-t border-border/50">
+                  <a
+                    href={featuredArticle.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 bg-lta-green hover:bg-lta-green-dark text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-lta-green/20"
+                  >
+                    Visit Millicent Academy
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                      <span>1st &amp; 2nd Prize</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-lta-blue" />
+                      <span>2 of 3 Qualified</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </Card>
         </motion.div>
       </section>

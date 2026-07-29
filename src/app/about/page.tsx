@@ -20,7 +20,6 @@ import {
   ShieldCheck,
   Code2,
   MapPin,
-  Calendar,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -319,13 +318,9 @@ export default function AboutPage() {
                     </h3>
                     <p className="text-white/70 text-sm font-medium mb-4">Founder &amp; CEO</p>
 
-                    <div className="flex items-center gap-2 text-white/80 text-xs mb-2">
+                    <div className="flex items-center gap-2 text-white/80 text-xs">
                       <MapPin className="h-3.5 w-3.5" />
                       <span>Leribe 300 District, Lesotho</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-white/80 text-xs">
-                      <Calendar className="h-3.5 w-3.5" />
-                      <span>Age 32</span>
                     </div>
 
                     {/* Achievement Badge */}
@@ -357,7 +352,7 @@ export default function AboutPage() {
                         <BookOpen className="h-5 w-5 text-lta-blue" />
                         Biography
                       </h4>
-                      <div className="space-y-3 text-muted-foreground text-sm sm:text-base leading-relaxed">
+                      <div className="space-y-3 text-muted-foreground text-sm sm:text-base leading-relaxed text-justify">
                         <p>
                           Relebohile Joseph Mohono is a passionate technologist and educator who
                           founded Lesotho Tech Academy with a singular vision: to equip Basotho
