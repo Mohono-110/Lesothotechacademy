@@ -73,3 +73,35 @@ Stage Summary:
 - Responsive design with mobile collapse and overlay
 - Payment history section added to payments tab
 - Profile image upload with preview in edit mode
+
+---
+Task ID: 7
+Agent: Main Agent
+Task: Rebuild Admin Dashboard with full management panel
+
+Work Log:
+- Analyzed existing admin API routes (4 endpoints: students, applications, payments, courses)
+- Updated login page to redirect admins to /admin route instead of /dashboard
+- Created new API route: /api/admin/messages (GET, PUT, DELETE) for contact form messages
+- Built complete Admin Dashboard page at /admin with sidebar layout
+- Admin Dashboard features:
+  - Overview tab: stats cards (students, applications, revenue, messages), recent applications, pending payments, course performance
+  - Students tab: list with activate/deactivate, verify, view details dialog with enrollments and applications
+  - Applications tab: list with status badges, approve/enroll, reject, view details dialog with motivational letter and payments
+  - Payments tab: list with method badges, receipt image links, approve/reject, view details dialog
+  - Courses tab: grid cards with enrolled count, revenue, publish/unpublish toggle switches
+  - Messages tab: list with read/unread indicators, mark read/unread, delete, view details dialog
+- All dialogs use shadcn/ui Dialog component with proper layouts
+- Responsive design: sidebar collapses to hamburger on mobile
+- Framer Motion animations for tab transitions and card entrances
+- Browser verified: admin login redirects to /admin, all 6 tabs render correctly
+- All routes return 200: /, /admin, /courses, /about, /login, /dashboard
+- All APIs return 200: students, applications, payments, courses, messages
+- Lint passes cleanly
+
+Stage Summary:
+- Admin Dashboard at /admin with 6 management tabs
+- Admin login credentials: admin@lesothotechacademy.com / admin123
+- Login page updated to redirect admins to /admin
+- New contact messages API for managing contact form submissions
+- Full CRUD operations: approve/reject applications, verify/activate students, publish/unpublish courses

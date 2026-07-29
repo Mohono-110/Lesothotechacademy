@@ -35,7 +35,7 @@ export default function LoginPage() {
       localStorage.setItem('lta_user', JSON.stringify(data.user));
       localStorage.setItem('lta_role', data.role);
       toast.success(data.role === 'admin' ? 'Welcome back, Admin!' : `Welcome back, ${data.user.firstName || data.user.name}!`);
-      router.push('/dashboard');
+      router.push(data.role === 'admin' ? '/admin' : '/dashboard');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Login failed');
     } finally { setLoading(false); }
