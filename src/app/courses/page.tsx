@@ -20,6 +20,7 @@ import {
   GraduationCap,
   Sparkles,
   BookOpen,
+  Award,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -616,7 +617,7 @@ export default function CoursesPage() {
             <Card className="rounded-2xl border border-lta-green/10 shadow-lg overflow-hidden">
               <div className="h-1.5 bg-gradient-to-r from-lta-green to-lta-blue" />
               <CardContent className="p-6 sm:p-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   {/* Registration Fee */}
                   <div className="rounded-xl bg-lta-green/5 border border-lta-green/10 p-5">
                     <div className="flex items-center gap-3 mb-3">
@@ -633,8 +634,24 @@ export default function CoursesPage() {
                     </p>
                   </div>
 
+                  {/* Certificate Fee */}
+                  <div className="rounded-xl bg-amber-50 border border-amber-200 p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-600 text-white">
+                        <Award className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Certificate Fee</p>
+                        <p className="text-2xl font-bold text-amber-600">M700</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Certificate issued upon successful course completion
+                    </p>
+                  </div>
+
                   {/* Payment Methods */}
-                  <div className="rounded-xl bg-lta-blue/5 border border-lta-blue/10 p-5">
+                  <div className="rounded-xl bg-lta-blue/5 border border-lta-blue/10 p-5 sm:col-span-3">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-lta-blue text-white">
                         <Smartphone className="h-5 w-5" />
