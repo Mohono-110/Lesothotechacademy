@@ -59,7 +59,7 @@ const contactInfo = [
   {
     icon: Phone,
     title: 'Phone',
-    value: '+266 XX XXX XXX',
+    value: '+266 5069 9110 | +266 6283 5137',
     color: 'bg-lta-blue/10 text-lta-blue',
   },
   {
