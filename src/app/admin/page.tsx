@@ -9,7 +9,7 @@ import {
   LogOut, Loader2, CheckCircle, XCircle, Clock, Eye, EyeOff, Trash2,
   ChevronRight, Menu, X, Shield, UserCheck, UserX, DollarSign,
   GraduationCap, Phone, Mail, MapPin, Calendar, AlertCircle, Star,
-  TrendingUp, ArrowUpRight, BarChart3, ImageIcon, ExternalLink,
+  TrendingUp, ArrowUpRight, BarChart3, ImageIcon, ExternalLink, UserCog, Save, Camera, Lock,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -112,7 +112,7 @@ interface ContactMessageData {
   createdAt: string;
 }
 
-type AdminTab = 'overview' | 'students' | 'applications' | 'payments' | 'courses' | 'messages';
+type AdminTab = 'overview' | 'students' | 'applications' | 'payments' | 'courses' | 'messages' | 'profile';
 
 // ─── Status Colors ──────────────────────────────────────────────────────────
 
@@ -149,6 +149,11 @@ export default function AdminDashboard() {
   const [messages, setMessages] = useState<ContactMessageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Profile edit states
+  const [editMode, setEditMode] = useState(false);
+  const [profileForm, setProfileForm] = useState({ name: '', email: '', currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [profileSaving, setProfileSaving] = useState(false);
 
   // Dialog states
   const [viewApplication, setViewApplication] = useState<ApplicationData | null>(null);
@@ -229,6 +234,55 @@ export default function AdminDashboard() {
     localStorage.removeItem('lta_user');
     localStorage.removeItem('lta_role');
     router.push('/login');
+  };
+
+  const handleProfileSave = async () => {
+    if (!admin) return;
+    if (profileForm.newPassword && profileForm.newPassword !== profileForm.confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    if (profileForm.newPassword && profileForm.newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters');
+      return;
+    }
+
+    setProfileSaving(true);
+    try {
+      const payload: Record<string, string> = { adminId: admin.id };
+      if (profileForm.name.trim() && profileForm.name !== admin.name) payload.name = profileForm.name.trim();
+      if (profileForm.email.trim() && profileForm.email !== admin.email) payload.email = profileForm.email.trim();
+      if (profileForm.newPassword) {
+        payload.currentPassword = profileForm.currentPassword;
+        payload.newPassword = profileForm.newPassword;
+      }
+
+      if (Object.keys(payload).length <= 1) {
+        toast.error('No changes to save');
+        setProfileSaving(false);
+        return;
+      }
+
+      const res = await fetch('/api/admin/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update profile');
+
+      // Update local state and localStorage
+      const updatedAdmin = { ...admin, name: data.admin.name || admin.name, email: data.admin.email || admin.email };
+      setAdmin(updatedAdmin);
+      localStorage.setItem('lta_user', JSON.stringify(updatedAdmin));
+      setEditMode(false);
+      setProfileForm({ name: '', email: '', currentPassword: '', newPassword: '', confirmPassword: '' });
+      toast.success('Profile updated successfully');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update profile');
+    } finally {
+      setProfileSaving(false);
+    }
   };
 
   const handleApplicationStatus = async (applicationId: string, status: string, adminNote?: string) => {
@@ -367,6 +421,7 @@ export default function AdminDashboard() {
     { id: 'payments', label: 'Payments', icon: <CreditCard className="h-5 w-5" />, badge: stats.pendingPayments },
     { id: 'courses', label: 'Courses', icon: <BookOpen className="h-5 w-5" />, badge: courses.length },
     { id: 'messages', label: 'Messages', icon: <MessageSquare className="h-5 w-5" />, badge: stats.unreadMessages },
+    { id: 'profile', label: 'My Profile', icon: <UserCog className="h-5 w-5" /> },
   ];
 
   // ─── Tab Content Renderers ────────────────────────────────────────────────
@@ -946,6 +1001,188 @@ export default function AdminDashboard() {
     </motion.div>
   );
 
+  const renderProfile = () => (
+    <motion.div key="profile" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6 max-w-3xl">
+      <div>
+        <h2 className="text-2xl font-bold">My Profile</h2>
+        <p className="text-muted-foreground">Manage your admin account settings</p>
+      </div>
+
+      <Card>
+        <CardContent className="p-6">
+          {/* Profile Header */}
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-20 w-20">
+                <AvatarFallback className="bg-lta-blue/10 text-lta-blue text-2xl font-bold">
+                  {admin?.name?.split(' ').map(n => n[0]).join('')}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="text-xl font-bold">{admin?.name}</h3>
+                <p className="text-muted-foreground">{admin?.email}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge className="bg-lta-blue/10 text-lta-blue border-lta-blue/20">
+                    <Shield className="h-3 w-3 mr-1" /> Administrator
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">Joined {admin?.createdAt ? new Date(admin.createdAt).toLocaleDateString('en-LS', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+            <Button
+              variant={editMode ? 'outline' : 'default'}
+              className={editMode ? '' : 'bg-lta-green hover:bg-lta-green-dark text-white'}
+              onClick={() => {
+                if (editMode) {
+                  setEditMode(false);
+                  setProfileForm({ name: '', email: '', currentPassword: '', newPassword: '', confirmPassword: '' });
+                } else {
+                  setEditMode(true);
+                  setProfileForm({ name: admin?.name || '', email: admin?.email || '', currentPassword: '', newPassword: '', confirmPassword: '' });
+                }
+              }}
+            >
+              {editMode ? <><XCircle className="h-4 w-4 mr-2" /> Cancel</> : <><UserCog className="h-4 w-4 mr-2" /> Edit Profile</>}
+            </Button>
+          </div>
+
+          <Separator className="mb-6" />
+
+          {/* View Mode */}
+          {!editMode && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                  <UserCog className="h-4 w-4" /> Full Name
+                </div>
+                <p className="font-medium">{admin?.name}</p>
+              </div>
+              <div className="p-4 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                  <Mail className="h-4 w-4" /> Email Address
+                </div>
+                <p className="font-medium">{admin?.email}</p>
+              </div>
+              <div className="p-4 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                  <Shield className="h-4 w-4" /> Role
+                </div>
+                <p className="font-medium">Administrator</p>
+              </div>
+              <div className="p-4 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                  <Calendar className="h-4 w-4" /> Account Created
+                </div>
+                <p className="font-medium">{admin?.createdAt ? new Date(admin.createdAt).toLocaleDateString('en-LS', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Edit Mode */}
+          {editMode && (
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="admin-name">Full Name</Label>
+                <div className="relative">
+                  <UserCog className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="admin-name"
+                    value={profileForm.name}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Enter your full name"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="admin-email">Email Address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="admin-email"
+                    type="email"
+                    value={profileForm.email}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="Enter your email address"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Shield className="h-4 w-4" /> Change Password
+                </h4>
+                <p className="text-xs text-muted-foreground mb-4">Leave blank if you don&apos;t want to change your password</p>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="current-password">Current Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="current-password"
+                        type="password"
+                        value={profileForm.currentPassword}
+                        onChange={(e) => setProfileForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                        placeholder="Enter current password"
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="new-password">New Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="new-password"
+                          type="password"
+                          value={profileForm.newPassword}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                          placeholder="Min 6 characters"
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password">Confirm New Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="confirm-password"
+                          type="password"
+                          value={profileForm.confirmPassword}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                          placeholder="Confirm new password"
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t">
+                <Button
+                  className="bg-lta-green hover:bg-lta-green-dark text-white"
+                  onClick={handleProfileSave}
+                  disabled={profileSaving}
+                >
+                  {profileSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : <><Save className="h-4 w-4 mr-2" /> Save Changes</>}
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+
   // ─── Render Tab Content ───────────────────────────────────────────────────
 
   const renderTabContent = () => {
@@ -956,6 +1193,7 @@ export default function AdminDashboard() {
       case 'payments': return renderPayments();
       case 'courses': return renderCourses();
       case 'messages': return renderMessages();
+      case 'profile': return renderProfile();
       default: return renderOverview();
     }
   };

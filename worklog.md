@@ -105,3 +105,22 @@ Stage Summary:
 - Login page updated to redirect admins to /admin
 - New contact messages API for managing contact form submissions
 - Full CRUD operations: approve/reject applications, verify/activate students, publish/unpublish courses
+
+---
+Task ID: 8
+Agent: Main Agent
+Task: Add admin profile editing capability
+
+Work Log:
+- Created PUT /api/admin/profile API endpoint (name, email, password change with current password verification)
+- Added Profile tab (7th tab) to admin sidebar navigation
+- Built profile page with view mode (name, email, role, created date) and edit mode
+- Edit mode: full name, email, current password, new password, confirm password fields
+- Password validation: requires current password, min 6 chars, passwords must match
+- Email uniqueness check in API
+- Profile updates reflect immediately in sidebar and localStorage
+- Lint passes cleanly
+
+Stage Summary:
+- Admin can now edit name, email, and change password from /admin profile tab
+- API at /api/admin/profile with proper validation and bcrypt hashing
