@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
+import type { ReactNode } from 'react';
 import {
   Code,
   Network,
@@ -21,6 +23,7 @@ import {
   BookOpen,
   Loader2,
   AlertTriangle,
+  Award,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -501,16 +504,23 @@ export default function CourseDetailPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground leading-relaxed">{course.description}</p>
-                    {course.content && (
-                      <div className="mt-6 prose prose-sm max-w-none">
-                        {course.content.split('\n\n').map((paragraph, idx) => (
-                          <p key={idx} className="text-muted-foreground leading-relaxed mb-4">
-                            {paragraph}
-                          </p>
-                        ))}
-                      </div>
-                    )}
+                    <div className="text-muted-foreground leading-relaxed">
+                      <ReactMarkdown
+                        components={{
+                          h1: ({ children }) => <h1 className="text-2xl font-bold text-foreground mt-6 mb-3">{children as ReactNode}</h1>,
+                          h2: ({ children }) => <h2 className="text-xl font-bold text-foreground mt-5 mb-2">{children as ReactNode}</h2>,
+                          h3: ({ children }) => <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">{children as ReactNode}</h3>,
+                          p: ({ children }) => <p className="text-muted-foreground leading-relaxed mb-3">{children as ReactNode}</p>,
+                          strong: ({ children }) => <strong className="text-foreground font-semibold">{children as ReactNode}</strong>,
+                          em: ({ children }) => <em className="text-foreground/80 italic">{children as ReactNode}</em>,
+                          ul: ({ children }) => <ul className="list-disc list-inside space-y-1 mb-3 ml-4">{children as ReactNode}</ul>,
+                          ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 mb-3 ml-4">{children as ReactNode}</ol>,
+                          li: ({ children }) => <li className="text-muted-foreground leading-relaxed">{children as ReactNode}</li>,
+                        }}
+                      >
+                        {course.content}
+                      </ReactMarkdown>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -678,6 +688,13 @@ export default function CourseDetailPage() {
                           Registration
                         </span>
                         <span className="font-semibold text-lta-green">M300</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground flex items-center gap-2">
+                          <Award className="h-4 w-4 text-amber-600" />
+                          Certificate Fee
+                        </span>
+                        <span className="font-semibold text-amber-600">M700</span>
                       </div>
                     </div>
 

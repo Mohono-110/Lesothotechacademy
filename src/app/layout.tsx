@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import Navbar from "@/components/shared/Navbar";
-import Footer from "@/components/shared/Footer";
+import LayoutWrapper from "@/components/shared/LayoutWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -83,9 +82,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
-        <Navbar />
-        <main className="min-h-screen flex flex-col">{children}</main>
-        <Footer />
+        <LayoutWrapper>{children}</LayoutWrapper>
         <Toaster position="top-right" richColors closeButton />
       </body>
     </html>

@@ -26,3 +26,50 @@ Stage Summary:
 - Each course has 6-8 modules with detailed topics and 10 learning objectives
 - Millicent Academy Junior School linked with target="_blank"
 - Lint passes cleanly
+
+---
+Task ID: 6
+Agent: full-stack-developer
+Task: Create student profile API route
+
+Work Log:
+- Read prisma schema and existing API patterns
+- Created PUT /api/student/profile route
+- Added validation for email uniqueness and password matching
+- Ran lint check
+
+Stage Summary:
+- Profile API route at /api/student/profile with PUT method
+- Handles partial updates and password hashing
+---
+Task ID: 5
+Agent: full-stack-developer
+Task: Rewrite student dashboard with collapsible sidebar layout
+
+Work Log:
+- Read existing dashboard page and understood current functionality (tabs-based layout with auth check, applications, payment upload, profile view)
+- Read login page to understand auth flow (localStorage keys: lta_user, lta_role)
+- Checked available shadcn/ui components (avatar, separator, textarea, badge, card, etc.)
+- Read globals.css for custom CSS classes (lta-green, lta-blue, gradient-text, btn-glow-green, section-pattern)
+- Rewrote dashboard with collapsible sidebar navigation (sidebarOpen state for mobile toggle)
+- Added 6 tabs: Dashboard, Applications, Courses, Payments, News & Events, Profile
+- Dashboard tab: welcome banner with green gradient, 4 stat cards, news preview, recent applications
+- Applications tab: list view with status badges and Pay M300 buttons
+- Courses tab: enrolled course cards with progress bars and gradient accents
+- Payments tab: full payment upload form (M-Pesa/EcoCash/Bank selection, transaction ref, screenshot upload with preview) + payment history
+- News tab: grid of 6 placeholder news/event cards with READ MORE buttons
+- Profile tab: view mode (details grid with icons for all user fields) and edit mode (full form with all required fields)
+- Added edit profile functionality: editMode state, editForm object, profile image upload with preview
+- Profile edit calls PUT /api/student/profile with FormData
+- Responsive design: sidebar collapses to hamburger on mobile, overlay backdrop
+- Framer Motion animations throughout (tab transitions, card entrances, AnimatePresence)
+- Used shadcn/ui components: Card, Button, Badge, Input, Label, Select, Skeleton, Separator, Avatar, Textarea
+- Used Lucide icons throughout
+- Ran lint check - passed cleanly
+
+Stage Summary:
+- Complete sidebar-based student portal with all functionality preserved
+- Edit profile with full form fields (firstName, lastName, email, phone, dateOfBirth, gender, address, city, country, bio, password, confirmPassword)
+- Responsive design with mobile collapse and overlay
+- Payment history section added to payments tab
+- Profile image upload with preview in edit mode
