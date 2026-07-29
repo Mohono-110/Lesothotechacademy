@@ -499,23 +499,16 @@ export default function DashboardPage() {
             Track your applications, upload payments, and manage your learning journey at Lesotho Tech Academy.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link href="/admissions">
-              <Button
-                size="sm"
-                className="bg-white text-lta-green hover:bg-white/90 gap-1.5 shadow-lg"
-              >
+            <Button asChild size="sm" className="bg-white text-lta-green hover:bg-white/90 gap-1.5 shadow-lg">
+              <Link href="/admissions">
                 <BookOpen className="h-4 w-4" /> Apply for Course
-              </Button>
-            </Link>
-            <Link href="/courses">
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-white/30 text-white hover:bg-white/10 gap-1.5"
-              >
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline" className="border-white/30 text-white hover:bg-white/10 gap-1.5">
+              <Link href="/courses">
                 Browse Courses
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
         <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full" />
@@ -649,11 +642,11 @@ export default function DashboardPage() {
             <div className="text-center py-12 text-muted-foreground">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-30" />
               <p className="mb-4">You haven&apos;t applied for any courses yet.</p>
-              <Link href="/admissions">
-                <Button className="bg-lta-green hover:bg-lta-green-dark text-white gap-1.5">
+              <Button asChild className="bg-lta-green hover:bg-lta-green-dark text-white gap-1.5">
+                <Link href="/admissions">
                   <BookOpen className="h-4 w-4" /> Apply Now
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           ) : (
             <div className="space-y-3">
@@ -723,11 +716,11 @@ export default function DashboardPage() {
             <div className="text-center py-12 text-muted-foreground">
               <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-30" />
               <p className="mb-4">No enrolled courses yet. Apply and complete payment to get started!</p>
-              <Link href="/admissions">
-                <Button className="bg-lta-green hover:bg-lta-green-dark text-white gap-1.5">
+              <Button asChild className="bg-lta-green hover:bg-lta-green-dark text-white gap-1.5">
+                <Link href="/admissions">
                   <ArrowRight className="h-4 w-4" /> Apply for a Course
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 gap-4">
@@ -793,11 +786,11 @@ export default function DashboardPage() {
             <div className="text-center py-12 text-muted-foreground">
               <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-30" />
               <p>No pending payments. Apply for a course first!</p>
-              <Link href="/admissions" className="inline-block mt-4">
-                <Button className="bg-lta-green hover:bg-lta-green-dark text-white gap-1.5">
+              <Button asChild className="bg-lta-green hover:bg-lta-green-dark text-white gap-1.5">
+                <Link href="/admissions" className="inline-block mt-4">
                   <ArrowRight className="h-4 w-4" /> Apply Now
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           ) : (
             <form onSubmit={handlePaymentSubmit} className="space-y-5">

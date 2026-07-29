@@ -226,25 +226,18 @@ export default function HomePage() {
             transition={{ delay: 0.65, duration: 0.5 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14"
           >
-            <Link href="/admissions">
-              <Button
-                size="lg"
-                className="bg-lta-green hover:bg-lta-green-dark text-white text-base px-8 py-6 shadow-lg shadow-lta-green/30 btn-glow-green rounded-xl"
-              >
+            <Button asChild size="lg" className="bg-lta-green hover:bg-lta-green-dark text-white text-base px-8 py-6 shadow-lg shadow-lta-green/30 btn-glow-green rounded-xl">
+              <Link href="/admissions">
                 <GraduationCap className="h-5 w-5 mr-2" />
                 Apply Now
-              </Button>
-            </Link>
-            <Link href="/courses">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-2 border-white/30 text-white hover:bg-white/10 hover:text-white text-base px-8 py-6 rounded-xl backdrop-blur-sm"
-              >
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="border-2 border-white/30 text-white hover:bg-white/10 hover:text-white text-base px-8 py-6 rounded-xl backdrop-blur-sm">
+              <Link href="/courses">
                 <BookOpen className="h-5 w-5 mr-2" />
                 Explore Courses
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </motion.div>
 
           {/* Quick Stats */}
@@ -431,16 +424,12 @@ export default function HomePage() {
 
           {/* View All */}
           <motion.div variants={fadeUp} custom={4} className="text-center mt-10">
-            <Link href="/courses">
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-lta-green/30 text-lta-green hover:bg-lta-green hover:text-white btn-glow-green rounded-xl px-8"
-              >
+            <Button asChild variant="outline" size="lg" className="border-lta-green/30 text-lta-green hover:bg-lta-green hover:text-white btn-glow-green rounded-xl px-8">
+              <Link href="/courses">
                 View All Courses
                 <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </motion.div>
         </div>
       </Section>
@@ -571,16 +560,13 @@ export default function HomePage() {
                 Registration fee: Only M300 for all courses
               </p>
 
-              <Link href="/admissions">
-                <Button
-                  size="lg"
-                  className="bg-white text-[#1B5E20] hover:bg-lta-green-light hover:text-white text-base px-10 py-6 shadow-lg rounded-xl font-semibold transition-colors duration-300"
-                >
+              <Button asChild size="lg" className="bg-white text-[#1B5E20] hover:bg-lta-green-light hover:text-white text-base px-10 py-6 shadow-lg rounded-xl font-semibold transition-colors duration-300">
+                <Link href="/admissions">
                   <GraduationCap className="h-5 w-5 mr-2" />
                   Apply Now — M300 Registration
                   <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </motion.div>
         </div>

@@ -401,12 +401,12 @@ export default function CourseDetailPage() {
             <AlertTriangle className="h-16 w-16 text-amber-400 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-foreground mb-2">Course Not Found</h1>
             <p className="text-muted-foreground mb-6">The course you are looking for does not exist or has been removed.</p>
-            <Link href="/courses">
-              <Button className="bg-lta-green hover:bg-lta-green-dark text-white">
+            <Button asChild className="bg-lta-green hover:bg-lta-green-dark text-white">
+              <Link href="/courses">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Courses
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </motion.div>
         </div>
       </div>
@@ -724,25 +724,19 @@ export default function CourseDetailPage() {
                     <Separator />
 
                     {/* CTA */}
-                    <Link href="/admissions" className="block">
-                      <Button
-                        size="lg"
-                        className="w-full bg-lta-green hover:bg-lta-green-dark text-white btn-glow-green font-semibold text-base"
-                      >
+                    <Button asChild size="lg" className="w-full bg-lta-green hover:bg-lta-green-dark text-white btn-glow-green font-semibold text-base">
+                      <Link href="/admissions">
                         <GraduationCap className="h-5 w-5 mr-2" />
                         Apply for This Course
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
 
-                    <Link href="/courses" className="block">
-                      <Button
-                        variant="ghost"
-                        className="w-full text-muted-foreground hover:text-lta-green"
-                      >
+                    <Button asChild variant="ghost" className="w-full text-muted-foreground hover:text-lta-green">
+                      <Link href="/courses">
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Courses
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   </CardContent>
                 </Card>
 

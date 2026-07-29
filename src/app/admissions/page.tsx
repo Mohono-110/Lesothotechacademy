@@ -938,15 +938,11 @@ export default function AdmissionsPage() {
                   <p className="text-xs text-muted-foreground mb-3">
                     Contact us for assistance with your application
                   </p>
-                  <Link href="/contact">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full border-lta-green/30 text-lta-green hover:bg-lta-green/5"
-                    >
+                  <Button asChild variant="outline" size="sm" className="w-full border-lta-green/30 text-lta-green hover:bg-lta-green/5">
+                    <Link href="/contact">
                       Contact Support
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </CardContent>
               </Card>
             </motion.div>

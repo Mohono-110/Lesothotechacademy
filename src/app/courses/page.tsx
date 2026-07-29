@@ -416,21 +416,18 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
         </CardContent>
 
         <CardFooter className="flex gap-3 pt-2">
-          <Link href={`/courses/${course.slug}`} className="flex-1">
-            <Button
-              variant="outline"
-              className="w-full border-lta-green/30 text-lta-green hover:bg-lta-green hover:text-white transition-all"
-            >
-              View Full Details
-              <ArrowRight className="h-4 w-4 ml-1" />
+          <Button asChild variant="outline" className="flex-1 border-lta-green/30 text-lta-green hover:bg-lta-green hover:text-white transition-all">
+              <Link href={`/courses/${course.slug}`}>
+                View Full Details
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </Link>
             </Button>
-          </Link>
-          <Link href="/admissions" className="flex-1">
-            <Button className="w-full bg-lta-green hover:bg-lta-green-dark text-white btn-glow-green transition-all">
-              Apply Now
-              <GraduationCap className="h-4 w-4 ml-1" />
+            <Button asChild className="flex-1 bg-lta-green hover:bg-lta-green-dark text-white btn-glow-green transition-all">
+              <Link href="/admissions">
+                Apply Now
+                <GraduationCap className="h-4 w-4 ml-1" />
+              </Link>
             </Button>
-          </Link>
         </CardFooter>
       </Card>
     </motion.div>
@@ -694,15 +691,12 @@ export default function CoursesPage() {
                     at your own pace with live instructor-led sessions, interactive labs, and community support.
                   </p>
                 </div>
-                <Link href="/admissions" className="shrink-0">
-                  <Button
-                    size="lg"
-                    className="bg-white text-lta-green hover:bg-white/90 font-semibold shadow-lg transition-all"
-                  >
+                <Button asChild size="lg" className="bg-white text-lta-green hover:bg-white/90 font-semibold shadow-lg transition-all">
+                  <Link href="/admissions">
                     Enroll Now
                     <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
             </div>
           </motion.div>

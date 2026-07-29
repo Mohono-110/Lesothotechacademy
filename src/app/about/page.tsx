@@ -635,26 +635,19 @@ export default function AboutPage() {
                 Registration fee: Only M300 for all courses
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link href="/admissions">
-                  <Button
-                    size="lg"
-                    className="bg-white text-[#1B5E20] hover:bg-lta-green-light hover:text-white text-base px-8 py-6 shadow-lg rounded-xl font-semibold transition-colors duration-300"
-                  >
+                <Button asChild size="lg" className="bg-white text-[#1B5E20] hover:bg-lta-green-light hover:text-white text-base px-8 py-6 shadow-lg rounded-xl font-semibold transition-colors duration-300">
+                  <Link href="/admissions">
                     <GraduationCap className="h-5 w-5 mr-2" />
                     Apply Now
                     <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </Link>
-                <Link href="/courses">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="border-2 border-white/30 text-white hover:bg-white/10 hover:text-white text-base px-8 py-6 rounded-xl backdrop-blur-sm"
-                  >
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-2 border-white/30 text-white hover:bg-white/10 hover:text-white text-base px-8 py-6 rounded-xl backdrop-blur-sm">
+                  <Link href="/courses">
                     <BookOpen className="h-5 w-5 mr-2" />
                     Browse Courses
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
             </div>
           </motion.div>
