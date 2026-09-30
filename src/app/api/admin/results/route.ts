@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-// GET /api/admin/results?studentId=xxx — Get all semesters & modules for a student
+// GET /api/admin/results?studentId=xxx
+// Returns student info, their enrollments (with course + courseModules), and existing semester results
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get('studentId');
 
     if (!studentId) {
-      // Return all students with their semester count
+      // Return all students with enrollment info
       const students = await db.student.findMany({
         select: {
           id: true,
@@ -19,6 +20,11 @@ export async function GET(request: NextRequest) {
           gender: true,
           country: true,
           isActive: true,
+          enrollments: {
+            include: {
+              course: { select: { id: true, title: true, slug: true } },
+            },
+          },
           _count: { select: { semesters: true } },
         },
         orderBy: { createdAt: 'desc' },
@@ -26,12 +32,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ students });
     }
 
-    const semesters = await db.academicSemester.findMany({
-      where: { studentId },
-      include: { modules: { orderBy: { code: 'asc' } } },
-      orderBy: { createdAt: 'asc' },
-    });
-
+    // Get student with enrollments and course modules
     const student = await db.student.findUnique({
       where: { id: studentId },
       select: {
@@ -46,9 +47,30 @@ export async function GET(request: NextRequest) {
         city: true,
         createdAt: true,
         enrollments: {
-          include: { course: { select: { title: true, slug: true } } },
+          include: {
+            course: {
+              select: {
+                id: true,
+                title: true,
+                slug: true,
+                category: true,
+                courseModules: { orderBy: { sortOrder: 'asc' } },
+              },
+            },
+          },
         },
       },
+    });
+
+    if (!student) {
+      return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+    }
+
+    // Get existing semester results
+    const semesters = await db.academicSemester.findMany({
+      where: { studentId },
+      include: { modules: { orderBy: { code: 'asc' } } },
+      orderBy: { createdAt: 'asc' },
     });
 
     return NextResponse.json({ student, semesters });
@@ -58,11 +80,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/results — Create a semester with modules
+// POST /api/admin/results — Create a semester with module results
+// Body: { studentId, enrollmentId?, name, gpa, cgpa, creditsEarned, cumulativeCredits, modules: [{courseModuleId?, code, name, credits, grade}] }
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { studentId, name, gpa, cgpa, creditsEarned, cumulativeCredits, modules } = body;
+    const { studentId, enrollmentId, name, gpa, cgpa, creditsEarned, cumulativeCredits, modules } = body;
 
     if (!studentId || !name) {
       return NextResponse.json({ error: 'studentId and name are required' }, { status: 400 });
@@ -71,13 +94,15 @@ export async function POST(request: NextRequest) {
     const semester = await db.academicSemester.create({
       data: {
         studentId,
+        enrollmentId: enrollmentId || null,
         name,
         gpa: gpa || 0,
         cgpa: cgpa || 0,
         creditsEarned: creditsEarned || 0,
         cumulativeCredits: cumulativeCredits || 0,
         modules: {
-          create: (modules || []).map((m: { code: string; name: string; credits: number; grade: string }) => ({
+          create: (modules || []).map((m: { courseModuleId?: string; code: string; name: string; credits: number; grade: string }) => ({
+            courseModuleId: m.courseModuleId || null,
             code: m.code,
             name: m.name,
             credits: m.credits || 3,
@@ -133,6 +158,7 @@ export async function PUT(request: NextRequest) {
       const mod = await db.moduleResult.create({
         data: {
           semesterId,
+          courseModuleId: data.courseModuleId || null,
           code: data.code,
           name: data.name,
           credits: data.credits || 3,
@@ -140,6 +166,19 @@ export async function PUT(request: NextRequest) {
         },
       });
       return NextResponse.json({ module: mod });
+    }
+
+    // Bulk save grades for a semester (from course modules)
+    if (type === 'bulkGrades' && semesterId) {
+      const grades: { moduleId: string; grade: string }[] = data.grades;
+      const updates = grades.map((g) =>
+        db.moduleResult.update({
+          where: { id: g.moduleId },
+          data: { grade: g.grade },
+        })
+      );
+      await Promise.all(updates);
+      return NextResponse.json({ message: 'Grades saved' });
     }
 
     return NextResponse.json({ error: 'Invalid update type' }, { status: 400 });

@@ -5,12 +5,30 @@ export async function GET() {
   try {
     const courses = await db.course.findMany({
       orderBy: { createdAt: 'asc' },
+      include: {
+        _count: { select: { courseModules: true } },
+      },
     });
 
     const parsedCourses = courses.map(course => ({
-      ...course,
+      id: course.id,
+      title: course.title,
+      slug: course.slug,
+      description: course.description,
+      duration: course.duration,
+      durationMonths: course.durationMonths,
+      price: course.price,
+      currency: course.currency,
+      category: course.category,
+      level: course.level,
+      isPublished: course.isPublished,
+      image: course.image,
+      content: course.content,
       objectives: JSON.parse(course.objectives),
       modules: JSON.parse(course.modules),
+      createdAt: course.createdAt,
+      updatedAt: course.updatedAt,
+      moduleCount: course._count.courseModules,
     }));
 
     return NextResponse.json({ courses: parsedCourses });

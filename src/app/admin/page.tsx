@@ -71,6 +71,7 @@ interface CourseData {
   isPublished: boolean;
   image?: string;
   createdAt: string;
+  moduleCount?: number;
 }
 
 interface ApplicationData {
@@ -112,18 +113,45 @@ interface ContactMessageData {
   createdAt: string;
 }
 
+interface CourseModuleData {
+  id: string;
+  code: string;
+  name: string;
+  credits: number;
+  sortOrder: number;
+}
+
+interface ResultEnrollmentData {
+  id: string;
+  courseId: string;
+  status: string;
+  enrolledAt: string;
+  course: {
+    id: string;
+    title: string;
+    slug: string;
+    category?: string;
+    courseModules?: CourseModuleData[];
+  };
+}
+
 interface ResultStudentData {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
-  course?: string;
-  semesterCount: number;
+  phone?: string;
+  gender?: string;
+  country?: string;
+  isActive?: boolean;
+  enrollments?: ResultEnrollmentData[];
+  _count?: { semesters: number };
 }
 
 interface SemesterData {
   id: string;
   name: string;
+  enrollmentId?: string;
   gpa: number;
   cgpa: number;
   creditsEarned: number;
@@ -137,6 +165,26 @@ interface ModuleData {
   name: string;
   credits: number;
   grade: string;
+  courseModuleId?: string;
+}
+
+interface AddTermModule {
+  courseModuleId: string;
+  code: string;
+  name: string;
+  credits: number;
+  grade: string;
+}
+
+interface CourseModuleData {
+  id: string;
+  courseId: string;
+  code: string;
+  name: string;
+  credits: number;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 type AdminTab = 'overview' | 'students' | 'applications' | 'payments' | 'courses' | 'messages' | 'results' | 'profile';
@@ -158,6 +206,43 @@ const paymentMethodLabels: Record<string, string> = {
   mpesa: 'M-Pesa',
   ecocash: 'EcoCash',
   bank: 'Bank Transfer',
+};
+
+// ─── Course Module Templates ────────────────────────────────────────────────
+
+const moduleTemplates: Record<string, { code: string; name: string; credits: number }[]> = {
+  'Web Development': [
+    { code: 'WD101', name: 'Introduction to HTML & CSS', credits: 3 },
+    { code: 'WD102', name: 'JavaScript Fundamentals', credits: 3 },
+    { code: 'WD103', name: 'Responsive Web Design', credits: 3 },
+    { code: 'WD104', name: 'React & Next.js Basics', credits: 4 },
+    { code: 'WD105', name: 'Web APIs & Backend Integration', credits: 3 },
+    { code: 'WD106', name: 'Capstone Project', credits: 4 },
+  ],
+  'Computer Networks': [
+    { code: 'CN101', name: 'Network Fundamentals', credits: 3 },
+    { code: 'CN102', name: 'OSI Model & Protocols', credits: 3 },
+    { code: 'CN103', name: 'Routing & Switching', credits: 3 },
+    { code: 'CN104', name: 'Network Security', credits: 3 },
+    { code: 'CN105', name: 'Enterprise Network Management', credits: 4 },
+    { code: 'CN106', name: 'Capstone Project', credits: 4 },
+  ],
+  'CMS Development': [
+    { code: 'CM101', name: 'Introduction to CMS', credits: 3 },
+    { code: 'CM102', name: 'WordPress Development', credits: 3 },
+    { code: 'CM103', name: 'Joomla & Drupal', credits: 3 },
+    { code: 'CM104', name: 'Headless CMS & APIs', credits: 3 },
+    { code: 'CM105', name: 'E-Commerce Integration', credits: 3 },
+    { code: 'CM106', name: 'Capstone Project', credits: 4 },
+  ],
+  'Business Development Systems': [
+    { code: 'BD101', name: 'Entrepreneurship Fundamentals', credits: 3 },
+    { code: 'BD102', name: 'Digital Marketing', credits: 3 },
+    { code: 'BD103', name: 'Project Management', credits: 3 },
+    { code: 'BD104', name: 'Business Strategy', credits: 3 },
+    { code: 'BD105', name: 'Financial Management', credits: 3 },
+    { code: 'BD106', name: 'Capstone Project', credits: 4 },
+  ],
 };
 
 // ─── Component ─────────────────────────────────────────────────────────────
@@ -196,12 +281,33 @@ export default function AdminDashboard() {
   const [resultSemesters, setResultSemesters] = useState<SemesterData[]>([]);
   const [resultsLoading, setResultsLoading] = useState(false);
   const [resultsView, setResultsView] = useState<'list' | 'detail'>('list');
-  const [addSemesterDialog, setAddSemesterDialog] = useState(false);
-  const [addModuleDialog, setAddModuleDialog] = useState<string | null>(null); // semesterId
-  const [editGradeModule, setEditGradeModule] = useState<ModuleData | null>(null);
-  const [semesterForm, setSemesterForm] = useState({ name: '', gpa: '', cgpa: '', creditsEarned: '', cumulativeCredits: '' });
-  const [moduleForm, setModuleForm] = useState({ code: '', name: '', credits: '', grade: 'A' });
   const [resultsSaving, setResultsSaving] = useState(false);
+
+  // Course modules management states
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [courseModules, setCourseModules] = useState<CourseModuleData[]>([]);
+  const [showModulesView, setShowModulesView] = useState(false);
+  const [courseModulesLoading, setCourseModulesLoading] = useState(false);
+  const [addCourseModuleDialog, setAddCourseModuleDialog] = useState(false);
+  const [editCourseModule, setEditCourseModule] = useState<CourseModuleData | null>(null);
+  const [courseModuleForm, setCourseModuleForm] = useState({ code: '', name: '', credits: '3', sortOrder: '0' });
+  const [courseModuleSaving, setCourseModuleSaving] = useState(false);
+  const [resultsSearch, setResultsSearch] = useState('');
+  // Add Term Results dialog
+  const [addTermDialog, setAddTermDialog] = useState(false);
+  const [addTermForm, setAddTermForm] = useState<{
+    enrollmentId: string;
+    name: string;
+    gpa: string;
+    cgpa: string;
+    creditsEarned: string;
+    cumulativeCredits: string;
+    modules: AddTermModule[];
+  }>({ enrollmentId: '', name: '', gpa: '', cgpa: '', creditsEarned: '', cumulativeCredits: '', modules: [] });
+  // Edit Grades dialog (bulk edit for a semester)
+  const [editGradesDialog, setEditGradesDialog] = useState(false);
+  const [editGradesSemester, setEditGradesSemester] = useState<SemesterData | null>(null);
+  const [editGradesForm, setEditGradesForm] = useState<{ moduleId: string; grade: string }[]>([]);
 
   // Auth check
   useEffect(() => {
@@ -275,7 +381,7 @@ export default function AdminDashboard() {
       const res = await fetch(`/api/admin/results?studentId=${studentId}`);
       const data = await res.json();
       if (data.semesters) setResultSemesters(data.semesters);
-      if (data.student) setSelectedResultStudent(prev => prev ? { ...prev, ...data.student } : data.student);
+      if (data.student) setSelectedResultStudent(data.student);
     } catch (err) { console.error('Fetch student results error:', err); }
     finally { setResultsLoading(false); }
   }, []);
@@ -482,9 +588,48 @@ export default function AdminDashboard() {
     fetchResultStudents();
   };
 
-  const handleAddSemester = async () => {
+  const handleOpenAddTermDialog = () => {
+    const student = selectedResultStudent;
+    const defaultEnrollmentId = student?.enrollments && student.enrollments.length > 0 ? student.enrollments[0].id : '';
+    setAddTermForm({ enrollmentId: defaultEnrollmentId, name: '', gpa: '', cgpa: '', creditsEarned: '', cumulativeCredits: '', modules: [] });
+    // Auto-load modules if there's a default enrollment
+    if (defaultEnrollmentId && student?.enrollments) {
+      const enrollment = student.enrollments.find(e => e.id === defaultEnrollmentId);
+      if (enrollment?.course?.courseModules) {
+        const mods = enrollment.course.courseModules.map(cm => ({
+          courseModuleId: cm.id,
+          code: cm.code,
+          name: cm.name,
+          credits: cm.credits,
+          grade: '',
+        }));
+        setAddTermForm(prev => ({ ...prev, modules: mods }));
+      }
+    }
+    setAddTermDialog(true);
+  };
+
+  const handleAddTermEnrollmentChange = (enrollmentId: string) => {
+    setAddTermForm(prev => ({ ...prev, enrollmentId, modules: [] }));
+    const student = selectedResultStudent;
+    if (student?.enrollments) {
+      const enrollment = student.enrollments.find(e => e.id === enrollmentId);
+      if (enrollment?.course?.courseModules) {
+        const mods = enrollment.course.courseModules.map(cm => ({
+          courseModuleId: cm.id,
+          code: cm.code,
+          name: cm.name,
+          credits: cm.credits,
+          grade: '',
+        }));
+        setAddTermForm(prev => ({ ...prev, modules: mods }));
+      }
+    }
+  };
+
+  const handleAddTermSave = async () => {
     if (!selectedResultStudent) return;
-    if (!semesterForm.name.trim()) { toast.error('Semester name is required'); return; }
+    if (!addTermForm.name.trim()) { toast.error('Term name is required'); return; }
     setResultsSaving(true);
     try {
       const res = await fetch('/api/admin/results', {
@@ -492,81 +637,65 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           studentId: selectedResultStudent.id,
-          name: semesterForm.name.trim(),
-          gpa: parseFloat(semesterForm.gpa) || 0,
-          cgpa: parseFloat(semesterForm.cgpa) || 0,
-          creditsEarned: parseInt(semesterForm.creditsEarned) || 0,
-          cumulativeCredits: parseInt(semesterForm.cumulativeCredits) || 0,
-          modules: [],
+          enrollmentId: addTermForm.enrollmentId || undefined,
+          name: addTermForm.name.trim(),
+          gpa: parseFloat(addTermForm.gpa) || 0,
+          cgpa: parseFloat(addTermForm.cgpa) || 0,
+          creditsEarned: parseFloat(addTermForm.creditsEarned) || 0,
+          cumulativeCredits: parseFloat(addTermForm.cumulativeCredits) || 0,
+          modules: addTermForm.modules.map(m => ({
+            courseModuleId: m.courseModuleId,
+            code: m.code,
+            name: m.name,
+            credits: m.credits,
+            grade: m.grade,
+          })),
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to add semester');
-      toast.success('Semester added successfully');
-      setAddSemesterDialog(false);
-      setSemesterForm({ name: '', gpa: '', cgpa: '', creditsEarned: '', cumulativeCredits: '' });
+      if (!res.ok) throw new Error(data.error || 'Failed to add term');
+      toast.success('Term results added successfully');
+      setAddTermDialog(false);
+      setAddTermForm({ enrollmentId: '', name: '', gpa: '', cgpa: '', creditsEarned: '', cumulativeCredits: '', modules: [] });
       fetchStudentResults(selectedResultStudent.id);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to add semester');
+      toast.error(err instanceof Error ? err.message : 'Failed to add term');
     } finally { setResultsSaving(false); }
   };
 
-  const handleAddModule = async () => {
-    if (!addModuleDialog) return;
-    if (!moduleForm.code.trim() || !moduleForm.name.trim()) { toast.error('Module code and name are required'); return; }
+  const handleOpenEditGrades = (semester: SemesterData) => {
+    setEditGradesSemester(semester);
+    setEditGradesForm(semester.modules.map(m => ({ moduleId: m.id, grade: m.grade })));
+    setEditGradesDialog(true);
+  };
+
+  const handleBulkSaveGrades = async () => {
+    if (!editGradesSemester) return;
     setResultsSaving(true);
     try {
       const res = await fetch('/api/admin/results', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: 'addModule',
-          semesterId: addModuleDialog,
-          data: {
-            code: moduleForm.code.trim(),
-            name: moduleForm.name.trim(),
-            credits: parseInt(moduleForm.credits) || 0,
-            grade: moduleForm.grade,
-          },
+          type: 'bulkGrades',
+          semesterId: editGradesSemester.id,
+          data: { grades: editGradesForm },
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to add module');
-      toast.success('Module added successfully');
-      setAddModuleDialog(null);
-      setModuleForm({ code: '', name: '', credits: '', grade: 'A' });
+      if (!res.ok) throw new Error(data.error || 'Failed to save grades');
+      toast.success('Grades updated successfully');
+      setEditGradesDialog(false);
+      setEditGradesSemester(null);
       if (selectedResultStudent) fetchStudentResults(selectedResultStudent.id);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to add module');
-    } finally { setResultsSaving(false); }
-  };
-
-  const handleEditGrade = async () => {
-    if (!editGradeModule) return;
-    setResultsSaving(true);
-    try {
-      const res = await fetch('/api/admin/results', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'module',
-          moduleId: editGradeModule.id,
-          data: { grade: editGradeModule.grade },
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update grade');
-      toast.success('Grade updated');
-      setEditGradeModule(null);
-      if (selectedResultStudent) fetchStudentResults(selectedResultStudent.id);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to update grade');
+      toast.error(err instanceof Error ? err.message : 'Failed to save grades');
     } finally { setResultsSaving(false); }
   };
 
   const handleDeleteSemester = async (semesterId: string) => {
     if (!selectedResultStudent) return;
-    if (!confirm('Delete this semester and all its modules?')) return;
+    if (!confirm('Delete this term and all its module results?')) return;
     try {
       const res = await fetch('/api/admin/results', {
         method: 'DELETE',
@@ -574,29 +703,159 @@ export default function AdminDashboard() {
         body: JSON.stringify({ type: 'semester', semesterId }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to delete semester');
-      toast.success('Semester deleted');
+      if (!res.ok) throw new Error(data.error || 'Failed to delete term');
+      toast.success('Term deleted');
       fetchStudentResults(selectedResultStudent.id);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to delete semester');
+      toast.error(err instanceof Error ? err.message : 'Failed to delete term');
     }
   };
 
-  const handleDeleteModule = async (moduleId: string) => {
-    if (!selectedResultStudent) return;
+  // Course Modules handlers
+  const fetchCourseModules = useCallback(async (courseId: string) => {
+    setCourseModulesLoading(true);
+    try {
+      const res = await fetch(`/api/admin/course-modules?courseId=${courseId}`);
+      const data = await res.json();
+      if (data.modules) setCourseModules(data.modules);
+    } catch (err) {
+      console.error('Fetch course modules error:', err);
+    } finally {
+      setCourseModulesLoading(false);
+    }
+  }, []);
+
+  const handleManageModules = async (courseId: string) => {
+    setSelectedCourseId(courseId);
+    setShowModulesView(true);
+    await fetchCourseModules(courseId);
+  };
+
+  const handleBackToCourses = () => {
+    setShowModulesView(false);
+    setSelectedCourseId(null);
+    setCourseModules([]);
+    fetchCourses();
+  };
+
+  const handleAddCourseModule = async () => {
+    if (!selectedCourseId) return;
+    if (!courseModuleForm.code.trim() || !courseModuleForm.name.trim()) {
+      toast.error('Module code and name are required');
+      return;
+    }
+    setCourseModuleSaving(true);
+    try {
+      const res = await fetch('/api/admin/course-modules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseId: selectedCourseId,
+          code: courseModuleForm.code.trim(),
+          name: courseModuleForm.name.trim(),
+          credits: parseInt(courseModuleForm.credits) || 3,
+          sortOrder: parseInt(courseModuleForm.sortOrder) || 0,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to add module');
+      toast.success('Module added successfully');
+      setAddCourseModuleDialog(false);
+      setCourseModuleForm({ code: '', name: '', credits: '3', sortOrder: '0' });
+      fetchCourseModules(selectedCourseId);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to add module');
+    } finally {
+      setCourseModuleSaving(false);
+    }
+  };
+
+  const handleEditCourseModule = async () => {
+    if (!editCourseModule) return;
+    if (!courseModuleForm.code.trim() || !courseModuleForm.name.trim()) {
+      toast.error('Module code and name are required');
+      return;
+    }
+    setCourseModuleSaving(true);
+    try {
+      const res = await fetch('/api/admin/course-modules', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          moduleId: editCourseModule.id,
+          data: {
+            code: courseModuleForm.code.trim(),
+            name: courseModuleForm.name.trim(),
+            credits: parseInt(courseModuleForm.credits) || 3,
+            sortOrder: parseInt(courseModuleForm.sortOrder) || 0,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update module');
+      toast.success('Module updated successfully');
+      setEditCourseModule(null);
+      setCourseModuleForm({ code: '', name: '', credits: '3', sortOrder: '0' });
+      if (selectedCourseId) fetchCourseModules(selectedCourseId);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update module');
+    } finally {
+      setCourseModuleSaving(false);
+    }
+  };
+
+  const handleDeleteCourseModule = async (moduleId: string) => {
+    if (!selectedCourseId) return;
     if (!confirm('Delete this module?')) return;
     try {
-      const res = await fetch('/api/admin/results', {
+      const res = await fetch('/api/admin/course-modules', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'module', moduleId }),
+        body: JSON.stringify({ moduleId }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to delete module');
       toast.success('Module deleted');
-      if (selectedResultStudent) fetchStudentResults(selectedResultStudent.id);
+      fetchCourseModules(selectedCourseId);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to delete module');
+    }
+  };
+
+  const handleAutoPopulateModules = async () => {
+    if (!selectedCourseId) return;
+    const selectedCourse = courses.find(c => c.id === selectedCourseId);
+    if (!selectedCourse) return;
+    const template = moduleTemplates[selectedCourse.category];
+    if (!template) {
+      toast.error('No template available for this course category');
+      return;
+    }
+    if (!confirm(`Auto-populate modules from "${selectedCourse.category}" template? This will add ${template.length} modules.`)) return;
+    setCourseModuleSaving(true);
+    try {
+      let successCount = 0;
+      for (let i = 0; i < template.length; i++) {
+        const mod = template[i];
+        const res = await fetch('/api/admin/course-modules', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            courseId: selectedCourseId,
+            code: mod.code,
+            name: mod.name,
+            credits: mod.credits,
+            sortOrder: i + 1,
+          }),
+        });
+        if (res.ok) successCount++;
+      }
+      toast.success(`${successCount} modules added from template`);
+      fetchCourseModules(selectedCourseId);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to auto-populate modules');
+    } finally {
+      setCourseModuleSaving(false);
     }
   };
 
@@ -621,7 +880,7 @@ export default function AdminDashboard() {
     { id: 'payments', label: 'Payments', icon: <CreditCard className="h-5 w-5" />, badge: stats.pendingPayments },
     { id: 'courses', label: 'Courses', icon: <BookOpen className="h-5 w-5" />, badge: courses.length },
     { id: 'messages', label: 'Messages', icon: <MessageSquare className="h-5 w-5" />, badge: stats.unreadMessages },
-    { id: 'results', label: 'Results', icon: <FileText className="h-5 w-5" /> },
+    { id: 'results', label: 'Results', icon: <GraduationCap className="h-5 w-5" /> },
     { id: 'profile', label: 'My Profile', icon: <UserCog className="h-5 w-5" /> },
   ];
 
@@ -1067,78 +1326,265 @@ export default function AdminDashboard() {
 
   const renderCourses = () => (
     <motion.div key="courses" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Courses</h2>
-          <p className="text-muted-foreground">{courses.length} courses · {stats.publishedCourses} published</p>
-        </div>
-      </div>
+      {!showModulesView ? (
+        <>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Courses</h2>
+              <p className="text-muted-foreground">{courses.length} courses · {stats.publishedCourses} published</p>
+            </div>
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {courses.map((course, index) => {
-          const courseApps = applications.filter(a => a.courseId === course.id);
-          const courseEnrolled = courseApps.filter(a => a.status === 'enrolled').length;
-          const courseRevenue = payments
-            .filter(p => p.application?.courseId === course.id && p.status === 'approved')
-            .reduce((sum, p) => sum + p.amount, 0);
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {courses.map((course, index) => {
+              const courseApps = applications.filter(a => a.courseId === course.id);
+              const courseEnrolled = courseApps.filter(a => a.status === 'enrolled').length;
+              const courseRevenue = payments
+                .filter(p => p.application?.courseId === course.id && p.status === 'approved')
+                .reduce((sum, p) => sum + p.amount, 0);
 
-          return (
-            <motion.div
-              key={course.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <Card className="hover:shadow-md transition-shadow overflow-hidden">
-                <div className="h-2 bg-gradient-to-r from-lta-green to-lta-blue" />
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-lg">{course.title}</h3>
-                      <p className="text-sm text-muted-foreground">{course.category} · {course.level}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-xl font-bold gradient-text">M{course.price.toLocaleString()}</span>
-                    </div>
-                  </div>
+              return (
+                <motion.div
+                  key={course.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Card className="hover:shadow-md transition-shadow overflow-hidden">
+                    <div className="h-2 bg-gradient-to-r from-lta-green to-lta-blue" />
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-lg">{course.title}</h3>
+                            {(course.moduleCount ?? 0) > 0 && (
+                              <Badge className="bg-lta-green/10 text-lta-green border-lta-green/20 text-xs">
+                                {course.moduleCount} module{course.moduleCount !== 1 ? 's' : ''}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">{course.category} · {course.level}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xl font-bold gradient-text">M{course.price.toLocaleString()}</span>
+                        </div>
+                      </div>
 
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{course.description}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{course.description}</p>
 
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    <div className="text-center p-2 rounded-lg bg-muted/50">
-                      <p className="text-lg font-bold">{courseApps.length}</p>
-                      <p className="text-xs text-muted-foreground">Applied</p>
-                    </div>
-                    <div className="text-center p-2 rounded-lg bg-muted/50">
-                      <p className="text-lg font-bold text-lta-green">{courseEnrolled}</p>
-                      <p className="text-xs text-muted-foreground">Enrolled</p>
-                    </div>
-                    <div className="text-center p-2 rounded-lg bg-muted/50">
-                      <p className="text-lg font-bold text-lta-blue">M{courseRevenue.toLocaleString()}</p>
-                      <p className="text-xs text-muted-foreground">Revenue</p>
-                    </div>
-                  </div>
+                      <div className="grid grid-cols-3 gap-3 mb-4">
+                        <div className="text-center p-2 rounded-lg bg-muted/50">
+                          <p className="text-lg font-bold">{courseApps.length}</p>
+                          <p className="text-xs text-muted-foreground">Applied</p>
+                        </div>
+                        <div className="text-center p-2 rounded-lg bg-muted/50">
+                          <p className="text-lg font-bold text-lta-green">{courseEnrolled}</p>
+                          <p className="text-xs text-muted-foreground">Enrolled</p>
+                        </div>
+                        <div className="text-center p-2 rounded-lg bg-muted/50">
+                          <p className="text-lg font-bold text-lta-blue">M{courseRevenue.toLocaleString()}</p>
+                          <p className="text-xs text-muted-foreground">Revenue</p>
+                        </div>
+                      </div>
 
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{course.duration}</Badge>
+                          <Badge variant="outline">{course.durationMonths} months</Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-lta-green border-lta-green/30 hover:bg-lta-green/10"
+                            onClick={() => handleManageModules(course.id)}
+                          >
+                            <BookOpen className="h-4 w-4 mr-1" /> Manage Modules
+                          </Button>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">Published</span>
+                            <Switch
+                              checked={course.isPublished}
+                              onCheckedChange={(checked) => handleCoursePublish(course.id, checked)}
+                              disabled={actionLoading === course.id}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Modules View */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="sm" onClick={handleBackToCourses}>
+                <ArrowLeft className="h-4 w-4 mr-1" /> Back to Courses
+              </Button>
+              <div>
+                <h2 className="text-2xl font-bold">Course Modules</h2>
+                <p className="text-muted-foreground">
+                  {courses.find(c => c.id === selectedCourseId)?.title || 'Course'} · {courseModules.length} module{courseModules.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {courses.find(c => c.id === selectedCourseId) && moduleTemplates[courses.find(c => c.id === selectedCourseId)!.category] && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAutoPopulateModules}
+                  disabled={courseModuleSaving}
+                >
+                  {courseModuleSaving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Star className="h-4 w-4 mr-1" />}
+                  Auto-Populate
+                </Button>
+              )}
+              <Button
+                size="sm"
+                className="bg-lta-green hover:bg-lta-green-dark text-white"
+                onClick={() => {
+                  setCourseModuleForm({ code: '', name: '', credits: '3', sortOrder: String(courseModules.length + 1) });
+                  setAddCourseModuleDialog(true);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-1" /> Add Module
+              </Button>
+            </div>
+          </div>
+
+          {/* Course info card */}
+          {(() => {
+            const course = courses.find(c => c.id === selectedCourseId);
+            if (!course) return null;
+            return (
+              <Card className="overflow-hidden">
+                <div className="bg-gradient-to-r from-lta-green to-lta-blue p-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{course.duration}</Badge>
-                      <Badge variant="outline">{course.durationMonths} months</Badge>
+                    <div>
+                      <h3 className="text-white font-bold text-lg">{course.title}</h3>
+                      <div className="flex items-center gap-4 mt-1 text-white/80 text-sm">
+                        <span>{course.category}</span>
+                        <span>{course.level}</span>
+                        <span>{course.duration}</span>
+                        <span>M{course.price.toLocaleString()}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Published</span>
-                      <Switch
-                        checked={course.isPublished}
-                        onCheckedChange={(checked) => handleCoursePublish(course.id, checked)}
-                        disabled={actionLoading === course.id}
-                      />
-                    </div>
+                    <Badge variant="outline" className="text-white border-white/30">
+                      {course.isPublished ? 'Published' : 'Draft'}
+                    </Badge>
                   </div>
-                </CardContent>
+                </div>
               </Card>
-            </motion.div>
-          );
-        })}
-      </div>
+            );
+          })()}
+
+          {courseModulesLoading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
+              ))}
+            </div>
+          ) : (
+            <>
+              {courseModules.length > 0 ? (
+                <Card className="overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b bg-muted/30">
+                            <th className="text-left p-3 font-medium w-12">#</th>
+                            <th className="text-left p-3 font-medium">Code</th>
+                            <th className="text-left p-3 font-medium">Module Name</th>
+                            <th className="text-center p-3 font-medium">Credits</th>
+                            <th className="text-center p-3 font-medium">Sort Order</th>
+                            <th className="text-right p-3 font-medium">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {courseModules.map((mod, modIndex) => (
+                            <motion.tr
+                              key={mod.id}
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: modIndex * 0.03 }}
+                              className="border-b last:border-0 hover:bg-muted/20"
+                            >
+                              <td className="p-3 text-muted-foreground">{modIndex + 1}</td>
+                              <td className="p-3 font-mono text-xs font-semibold">{mod.code}</td>
+                              <td className="p-3 font-medium">{mod.name}</td>
+                              <td className="p-3 text-center">
+                                <Badge variant="outline">{mod.credits}</Badge>
+                              </td>
+                              <td className="p-3 text-center text-muted-foreground">{mod.sortOrder}</td>
+                              <td className="p-3 text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setCourseModuleForm({
+                                        code: mod.code,
+                                        name: mod.name,
+                                        credits: String(mod.credits),
+                                        sortOrder: String(mod.sortOrder),
+                                      });
+                                      setEditCourseModule(mod);
+                                    }}
+                                  >
+                                    <Save className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-red-500 hover:text-red-700"
+                                    onClick={() => handleDeleteCourseModule(mod.id)}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </motion.tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="border-t bg-muted/20">
+                            <td colSpan={3} className="p-3 font-medium text-right">Total Credits:</td>
+                            <td className="p-3 text-center font-bold">{courseModules.reduce((sum, m) => sum + m.credits, 0)}</td>
+                            <td colSpan={2}></td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="p-12 text-center">
+                  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold">No Modules Yet</h3>
+                  <p className="text-muted-foreground mb-4">Add modules manually or use auto-populate from a template.</p>
+                  {courses.find(c => c.id === selectedCourseId) && moduleTemplates[courses.find(c => c.id === selectedCourseId)!.category] && (
+                    <Button
+                      className="bg-lta-green hover:bg-lta-green-dark text-white"
+                      onClick={handleAutoPopulateModules}
+                      disabled={courseModuleSaving}
+                    >
+                      {courseModuleSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Star className="h-4 w-4 mr-2" />}
+                      Auto-Populate from Template
+                    </Button>
+                  )}
+                </Card>
+              )}
+            </>
+          )}
+        </>
+      )}
     </motion.div>
   );
 
@@ -1385,14 +1831,35 @@ export default function AdminDashboard() {
   );
 
   const renderResults = () => {
+    const gradeOptions = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F'];
+
+    // Filter students by search
+    const filteredStudents = resultStudents.filter(s => {
+      if (!resultsSearch.trim()) return true;
+      const q = resultsSearch.toLowerCase();
+      return (
+        `${s.firstName} ${s.lastName}`.toLowerCase().includes(q) ||
+        s.email.toLowerCase().includes(q)
+      );
+    });
+
     return (
       <motion.div key="results" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
         {resultsView === 'list' ? (
           <>
-            <div className="flex items-center justify-between">
+            {/* View 1: Student List */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold">Results</h2>
-                <p className="text-muted-foreground">{resultStudents.length} students with results</p>
+                <h2 className="text-2xl font-bold">Results Management</h2>
+                <p className="text-muted-foreground">{resultStudents.length} enrolled students</p>
+              </div>
+              <div className="w-full sm:w-72">
+                <Input
+                  placeholder="Search by name or email..."
+                  value={resultsSearch}
+                  onChange={(e) => setResultsSearch(e.target.value)}
+                  className="w-full"
+                />
               </div>
             </div>
 
@@ -1404,48 +1871,56 @@ export default function AdminDashboard() {
               </div>
             ) : (
               <div className="space-y-3">
-                {resultStudents.map((student, index) => (
-                  <motion.div
-                    key={student.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                  >
-                    <Card className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-4 flex-1 min-w-0">
-                            <Avatar className="h-10 w-10 shrink-0">
-                              <AvatarFallback className="bg-lta-green/10 text-lta-green font-bold">
-                                {student.firstName?.[0]}{student.lastName?.[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0 flex-1">
-                              <h3 className="font-semibold">{student.firstName} {student.lastName}</h3>
-                              <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
-                                <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{student.email}</span>
-                                {student.course && <span className="flex items-center gap-1"><BookOpen className="h-3 w-3" />{student.course}</span>}
-                                <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{student.semesterCount} semester{student.semesterCount !== 1 ? 's' : ''}</span>
+                {filteredStudents.map((student, index) => {
+                  const enrolledCourses = student.enrollments?.filter(e => e.status === 'active' || e.status === 'completed') || [];
+                  const semesterCount = student._count?.semesters || 0;
+                  return (
+                    <motion.div
+                      key={student.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                    >
+                      <Card className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4 flex-1 min-w-0">
+                              <Avatar className="h-10 w-10 shrink-0">
+                                <AvatarFallback className="bg-lta-green/10 text-lta-green font-bold">
+                                  {student.firstName?.[0]}{student.lastName?.[0]}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0 flex-1">
+                                <h3 className="font-semibold">{student.firstName} {student.lastName}</h3>
+                                <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
+                                  <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{student.email}</span>
+                                  {enrolledCourses.length > 0 && (
+                                    <span className="flex items-center gap-1"><BookOpen className="h-3 w-3" />{enrolledCourses.map(e => e.course.title).join(', ')}</span>
+                                  )}
+                                  <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{semesterCount} term{semesterCount !== 1 ? 's' : ''}</span>
+                                </div>
                               </div>
                             </div>
+                            <Button
+                              size="sm"
+                              className="bg-lta-green hover:bg-lta-green-dark text-white"
+                              onClick={() => handleManageResults(student)}
+                            >
+                              <FileText className="h-4 w-4 mr-1" /> Manage Results
+                            </Button>
                           </div>
-                          <Button
-                            size="sm"
-                            className="bg-lta-green hover:bg-lta-green-dark text-white"
-                            onClick={() => handleManageResults(student)}
-                          >
-                            <FileText className="h-4 w-4 mr-1" /> Manage Results
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-                {resultStudents.length === 0 && (
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+                {filteredStudents.length === 0 && (
                   <Card className="p-12 text-center">
                     <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                     <h3 className="text-lg font-semibold">No Students Found</h3>
-                    <p className="text-muted-foreground">Students will appear here once they have enrollments.</p>
+                    <p className="text-muted-foreground">
+                      {resultsSearch ? 'No students match your search.' : 'Students will appear here once they have enrollments.'}
+                    </p>
                   </Card>
                 )}
               </div>
@@ -1453,14 +1928,15 @@ export default function AdminDashboard() {
           </>
         ) : (
           <>
-            <div className="flex items-center justify-between">
+            {/* View 2: Student Results Detail */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <Button variant="ghost" size="sm" onClick={handleBackToResultList}>
                   <ArrowLeft className="h-4 w-4 mr-1" /> Back
                 </Button>
                 <div>
                   <h2 className="text-2xl font-bold">{selectedResultStudent?.firstName} {selectedResultStudent?.lastName}</h2>
-                  <p className="text-muted-foreground">{selectedResultStudent?.email}</p>
+                  <p className="text-muted-foreground text-sm">{selectedResultStudent?.email}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -1474,13 +1950,49 @@ export default function AdminDashboard() {
                 <Button
                   size="sm"
                   className="bg-lta-green hover:bg-lta-green-dark text-white"
-                  onClick={() => setAddSemesterDialog(true)}
+                  onClick={handleOpenAddTermDialog}
                 >
-                  <Plus className="h-4 w-4 mr-1" /> Add Semester
+                  <Plus className="h-4 w-4 mr-1" /> Add Term Results
                 </Button>
               </div>
             </div>
 
+            {/* Student Info Card */}
+            <Card className="border-l-4 border-l-lta-green">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4 mb-3">
+                  <Avatar className="h-12 w-12">
+                    <AvatarFallback className="bg-lta-green/10 text-lta-green text-lg font-bold">
+                      {selectedResultStudent?.firstName?.[0]}{selectedResultStudent?.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-bold text-lg">{selectedResultStudent?.firstName} {selectedResultStudent?.lastName}</h3>
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+                      <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{selectedResultStudent?.email}</span>
+                      {selectedResultStudent?.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{selectedResultStudent.phone}</span>}
+                      {selectedResultStudent?.country && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{selectedResultStudent.country}</span>}
+                    </div>
+                  </div>
+                </div>
+                <Separator className="my-3" />
+                <div>
+                  <Label className="text-muted-foreground text-xs uppercase tracking-wider">Active Enrollments</Label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {(selectedResultStudent?.enrollments || []).filter(e => e.status === 'active' || e.status === 'completed').map(enrollment => (
+                      <Badge key={enrollment.id} variant="outline" className="py-1.5 px-3 border-lta-green/30 text-lta-green">
+                        <BookOpen className="h-3 w-3 mr-1" /> {enrollment.course.title}
+                      </Badge>
+                    ))}
+                    {(selectedResultStudent?.enrollments || []).filter(e => e.status === 'active' || e.status === 'completed').length === 0 && (
+                      <span className="text-sm text-muted-foreground">No active enrollments</span>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Semester/Term Results */}
             {resultsLoading ? (
               <div className="space-y-3">
                 {[...Array(2)].map((_, i) => (
@@ -1500,7 +2012,7 @@ export default function AdminDashboard() {
                       <div className="bg-gradient-to-r from-lta-blue to-lta-green p-4 flex items-center justify-between">
                         <div>
                           <h3 className="text-white font-bold text-lg">{semester.name}</h3>
-                          <div className="flex items-center gap-4 mt-1 text-white/80 text-sm">
+                          <div className="flex items-center gap-4 mt-1 text-white/80 text-sm flex-wrap">
                             <span>GPA: <strong className="text-white">{semester.gpa}</strong></span>
                             <span>CGPA: <strong className="text-white">{semester.cgpa}</strong></span>
                             <span>Credits: <strong className="text-white">{semester.creditsEarned}</strong></span>
@@ -1512,9 +2024,9 @@ export default function AdminDashboard() {
                             variant="ghost"
                             size="sm"
                             className="text-white hover:bg-white/20"
-                            onClick={() => setAddModuleDialog(semester.id)}
+                            onClick={() => handleOpenEditGrades(semester)}
                           >
-                            <Plus className="h-4 w-4 mr-1" /> Add Module
+                            <Save className="h-4 w-4 mr-1" /> Edit Grades
                           </Button>
                           <Button
                             variant="ghost"
@@ -1535,7 +2047,6 @@ export default function AdminDashboard() {
                                 <th className="text-left p-3 font-medium">Module Name</th>
                                 <th className="text-center p-3 font-medium">Credits</th>
                                 <th className="text-center p-3 font-medium">Grade</th>
-                                <th className="text-right p-3 font-medium">Actions</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1545,33 +2056,14 @@ export default function AdminDashboard() {
                                   <td className="p-3">{mod.name}</td>
                                   <td className="p-3 text-center">{mod.credits}</td>
                                   <td className="p-3 text-center">
-                                    <Badge variant="outline" className="font-bold">{mod.grade}</Badge>
-                                  </td>
-                                  <td className="p-3 text-right">
-                                    <div className="flex items-center justify-end gap-1">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setEditGradeModule(mod)}
-                                      >
-                                        <Save className="h-3 w-3" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-red-500 hover:text-red-700"
-                                        onClick={() => handleDeleteModule(mod.id)}
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
-                                    </div>
+                                    <Badge variant="outline" className="font-bold">{mod.grade || '—'}</Badge>
                                   </td>
                                 </tr>
                               ))}
                               {semester.modules.length === 0 && (
                                 <tr>
-                                  <td colSpan={5} className="p-6 text-center text-muted-foreground">
-                                    No modules yet. Click &quot;Add Module&quot; to add one.
+                                  <td colSpan={4} className="p-6 text-center text-muted-foreground">
+                                    No modules in this term yet.
                                   </td>
                                 </tr>
                               )}
@@ -1585,8 +2077,8 @@ export default function AdminDashboard() {
                 {resultSemesters.length === 0 && (
                   <Card className="p-12 text-center">
                     <GraduationCap className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold">No Semesters Yet</h3>
-                    <p className="text-muted-foreground">Click &quot;Add Semester&quot; to create the first semester for this student.</p>
+                    <h3 className="text-lg font-semibold">No Terms Yet</h3>
+                    <p className="text-muted-foreground">Click &quot;Add Term Results&quot; to create the first term for this student.</p>
                   </Card>
                 )}
               </div>
@@ -2058,173 +2550,326 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Add Semester Dialog */}
-      <Dialog open={addSemesterDialog} onOpenChange={setAddSemesterDialog}>
-        <DialogContent className="max-w-lg">
+      {/* Add Term Results Dialog */}
+      <Dialog open={addTermDialog} onOpenChange={setAddTermDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add New Semester</DialogTitle>
-            <DialogDescription>Add a new academic semester for {selectedResultStudent?.firstName} {selectedResultStudent?.lastName}</DialogDescription>
+            <DialogTitle>Add Term Results</DialogTitle>
+            <DialogDescription>Create a new academic term for {selectedResultStudent?.firstName} {selectedResultStudent?.lastName}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="semester-name">Semester Name</Label>
-              <Input
-                id="semester-name"
-                value={semesterForm.name}
-                onChange={(e) => setSemesterForm(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="e.g. Semester 1, Year 1 Sem 1"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+            {/* Enrollment select */}
+            {(selectedResultStudent?.enrollments || []).length > 0 && (
               <div className="space-y-2">
-                <Label htmlFor="semester-gpa">GPA</Label>
-                <Input
-                  id="semester-gpa"
-                  type="number"
-                  step="0.01"
-                  value={semesterForm.gpa}
-                  onChange={(e) => setSemesterForm(prev => ({ ...prev, gpa: e.target.value }))}
-                  placeholder="0.00"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="semester-cgpa">CGPA</Label>
-                <Input
-                  id="semester-cgpa"
-                  type="number"
-                  step="0.01"
-                  value={semesterForm.cgpa}
-                  onChange={(e) => setSemesterForm(prev => ({ ...prev, cgpa: e.target.value }))}
-                  placeholder="0.00"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="semester-credits">Credits Earned</Label>
-                <Input
-                  id="semester-credits"
-                  type="number"
-                  value={semesterForm.creditsEarned}
-                  onChange={(e) => setSemesterForm(prev => ({ ...prev, creditsEarned: e.target.value }))}
-                  placeholder="0"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="semester-cum-credits">Cumulative Credits</Label>
-                <Input
-                  id="semester-cum-credits"
-                  type="number"
-                  value={semesterForm.cumulativeCredits}
-                  onChange={(e) => setSemesterForm(prev => ({ ...prev, cumulativeCredits: e.target.value }))}
-                  placeholder="0"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setAddSemesterDialog(false); setSemesterForm({ name: '', gpa: '', cgpa: '', creditsEarned: '', cumulativeCredits: '' }); }}>Cancel</Button>
-            <Button className="bg-lta-green hover:bg-lta-green-dark text-white" onClick={handleAddSemester} disabled={resultsSaving}>
-              {resultsSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />} Add Semester
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Module Dialog */}
-      <Dialog open={!!addModuleDialog} onOpenChange={() => { setAddModuleDialog(null); setModuleForm({ code: '', name: '', credits: '', grade: 'A' }); }}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Add Module</DialogTitle>
-            <DialogDescription>Add a new module to this semester</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="module-code">Module Code</Label>
-                <Input
-                  id="module-code"
-                  value={moduleForm.code}
-                  onChange={(e) => setModuleForm(prev => ({ ...prev, code: e.target.value }))}
-                  placeholder="e.g. CS101"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="module-name">Module Name</Label>
-                <Input
-                  id="module-name"
-                  value={moduleForm.name}
-                  onChange={(e) => setModuleForm(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="e.g. Introduction to Computing"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="module-credits">Credits</Label>
-                <Input
-                  id="module-credits"
-                  type="number"
-                  value={moduleForm.credits}
-                  onChange={(e) => setModuleForm(prev => ({ ...prev, credits: e.target.value }))}
-                  placeholder="0"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="module-grade">Grade</Label>
-                <Select value={moduleForm.grade} onValueChange={(val) => setModuleForm(prev => ({ ...prev, grade: val }))}>
-                  <SelectTrigger id="module-grade">
-                    <SelectValue placeholder="Select grade" />
+                <Label htmlFor="term-enrollment">Enrollment / Course</Label>
+                <Select value={addTermForm.enrollmentId} onValueChange={handleAddTermEnrollmentChange}>
+                  <SelectTrigger id="term-enrollment">
+                    <SelectValue placeholder="Select enrollment" />
                   </SelectTrigger>
                   <SelectContent>
-                    {['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F'].map((g) => (
-                      <SelectItem key={g} value={g}>{g}</SelectItem>
+                    {selectedResultStudent?.enrollments?.map((e) => (
+                      <SelectItem key={e.id} value={e.id}>
+                        {e.course.title} ({e.status})
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+            )}
+            {/* Term name */}
+            <div className="space-y-2">
+              <Label htmlFor="term-name">Term Name</Label>
+              <Input
+                id="term-name"
+                value={addTermForm.name}
+                onChange={(e) => setAddTermForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g. Term 1 - April 2026"
+              />
             </div>
+            {/* GPA / CGPA */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="term-gpa">GPA</Label>
+                <Input
+                  id="term-gpa"
+                  type="number"
+                  step="0.01"
+                  value={addTermForm.gpa}
+                  onChange={(e) => setAddTermForm(prev => ({ ...prev, gpa: e.target.value }))}
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="term-cgpa">CGPA</Label>
+                <Input
+                  id="term-cgpa"
+                  type="number"
+                  step="0.01"
+                  value={addTermForm.cgpa}
+                  onChange={(e) => setAddTermForm(prev => ({ ...prev, cgpa: e.target.value }))}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+            {/* Credits */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="term-credits">Credits Earned</Label>
+                <Input
+                  id="term-credits"
+                  type="number"
+                  value={addTermForm.creditsEarned}
+                  onChange={(e) => setAddTermForm(prev => ({ ...prev, creditsEarned: e.target.value }))}
+                  placeholder="0"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="term-cum-credits">Cumulative Credits</Label>
+                <Input
+                  id="term-cum-credits"
+                  type="number"
+                  value={addTermForm.cumulativeCredits}
+                  onChange={(e) => setAddTermForm(prev => ({ ...prev, cumulativeCredits: e.target.value }))}
+                  placeholder="0"
+                />
+              </div>
+            </div>
+            {/* Course Modules with grade dropdowns */}
+            {addTermForm.modules.length > 0 && (
+              <div className="space-y-2">
+                <Label>Course Modules — Enter Grades</Label>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/30">
+                        <th className="text-left p-3 font-medium">Code</th>
+                        <th className="text-left p-3 font-medium">Module Name</th>
+                        <th className="text-center p-3 font-medium">Credits</th>
+                        <th className="text-center p-3 font-medium">Grade</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {addTermForm.modules.map((mod, modIdx) => (
+                        <tr key={mod.courseModuleId || modIdx} className="border-b last:border-0">
+                          <td className="p-3 font-mono text-xs">{mod.code}</td>
+                          <td className="p-3">{mod.name}</td>
+                          <td className="p-3 text-center">{mod.credits}</td>
+                          <td className="p-3">
+                            <Select
+                              value={mod.grade || undefined}
+                              onValueChange={(val) => {
+                                setAddTermForm(prev => ({
+                                  ...prev,
+                                  modules: prev.modules.map((m, i) => i === modIdx ? { ...m, grade: val } : m),
+                                }));
+                              }}
+                            >
+                              <SelectTrigger className="h-8 w-20 mx-auto">
+                                <SelectValue placeholder="—" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F'].map((g) => (
+                                  <SelectItem key={g} value={g}>{g}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+            {addTermForm.enrollmentId && addTermForm.modules.length === 0 && (
+              <div className="text-center py-6 text-muted-foreground text-sm border rounded-lg">
+                No course modules found for this enrollment. You can still save the term without module results.
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setAddModuleDialog(null); setModuleForm({ code: '', name: '', credits: '', grade: 'A' }); }}>Cancel</Button>
-            <Button className="bg-lta-green hover:bg-lta-green-dark text-white" onClick={handleAddModule} disabled={resultsSaving}>
-              {resultsSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />} Add Module
+            <Button variant="outline" onClick={() => { setAddTermDialog(false); setAddTermForm({ enrollmentId: '', name: '', gpa: '', cgpa: '', creditsEarned: '', cumulativeCredits: '', modules: [] }); }}>Cancel</Button>
+            <Button className="bg-lta-green hover:bg-lta-green-dark text-white" onClick={handleAddTermSave} disabled={resultsSaving}>
+              {resultsSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />} Save Term Results
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Grade Dialog */}
-      <Dialog open={!!editGradeModule} onOpenChange={() => setEditGradeModule(null)}>
-        <DialogContent className="max-w-sm">
+      {/* Edit Grades Dialog (bulk) */}
+      <Dialog open={editGradesDialog} onOpenChange={setEditGradesDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Grade</DialogTitle>
-            <DialogDescription>Update grade for {editGradeModule?.name} ({editGradeModule?.code})</DialogDescription>
+            <DialogTitle>Edit Grades</DialogTitle>
+            <DialogDescription>Update grades for {editGradesSemester?.name}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-grade">Grade</Label>
-              <Select
-                value={editGradeModule?.grade || 'A'}
-                onValueChange={(val) => {
-                  if (editGradeModule) setEditGradeModule({ ...editGradeModule, grade: val });
-                }}
-              >
-                <SelectTrigger id="edit-grade">
-                  <SelectValue placeholder="Select grade" />
-                </SelectTrigger>
-                <SelectContent>
-                  {['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F'].map((g) => (
-                    <SelectItem key={g} value={g}>{g}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {editGradesSemester && editGradesForm.length > 0 && (
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/30">
+                      <th className="text-left p-3 font-medium">Code</th>
+                      <th className="text-left p-3 font-medium">Module Name</th>
+                      <th className="text-center p-3 font-medium">Credits</th>
+                      <th className="text-center p-3 font-medium">Grade</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {editGradesSemester.modules.map((mod, modIdx) => (
+                      <tr key={mod.id} className="border-b last:border-0">
+                        <td className="p-3 font-mono text-xs">{mod.code}</td>
+                        <td className="p-3">{mod.name}</td>
+                        <td className="p-3 text-center">{mod.credits}</td>
+                        <td className="p-3">
+                          <Select
+                            value={editGradesForm[modIdx]?.grade || undefined}
+                            onValueChange={(val) => {
+                              setEditGradesForm(prev => prev.map((g, i) => i === modIdx ? { ...g, grade: val } : g));
+                            }}
+                          >
+                            <SelectTrigger className="h-8 w-20 mx-auto">
+                              <SelectValue placeholder="—" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F'].map((g) => (
+                                <SelectItem key={g} value={g}>{g}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {editGradesSemester && editGradesSemester.modules.length === 0 && (
+              <div className="text-center py-6 text-muted-foreground text-sm">
+                No modules in this term to edit.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditGradesDialog(false); setEditGradesSemester(null); }}>Cancel</Button>
+            <Button className="bg-lta-green hover:bg-lta-green-dark text-white" onClick={handleBulkSaveGrades} disabled={resultsSaving}>
+              {resultsSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />} Save All Grades
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Course Module Dialog */}
+      <Dialog open={addCourseModuleDialog} onOpenChange={(open) => { setAddCourseModuleDialog(open); if (!open) setCourseModuleForm({ code: '', name: '', credits: '3', sortOrder: '0' }); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Course Module</DialogTitle>
+            <DialogDescription>Add a new module to {courses.find(c => c.id === selectedCourseId)?.title || 'course'}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="cm-code">Module Code</Label>
+                <Input
+                  id="cm-code"
+                  value={courseModuleForm.code}
+                  onChange={(e) => setCourseModuleForm(prev => ({ ...prev, code: e.target.value }))}
+                  placeholder="e.g. WD101"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cm-name">Module Name</Label>
+                <Input
+                  id="cm-name"
+                  value={courseModuleForm.name}
+                  onChange={(e) => setCourseModuleForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g. Introduction to HTML & CSS"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="cm-credits">Credits</Label>
+                <Input
+                  id="cm-credits"
+                  type="number"
+                  value={courseModuleForm.credits}
+                  onChange={(e) => setCourseModuleForm(prev => ({ ...prev, credits: e.target.value }))}
+                  placeholder="3"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cm-sort">Sort Order</Label>
+                <Input
+                  id="cm-sort"
+                  type="number"
+                  value={courseModuleForm.sortOrder}
+                  onChange={(e) => setCourseModuleForm(prev => ({ ...prev, sortOrder: e.target.value }))}
+                  placeholder="1"
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditGradeModule(null)}>Cancel</Button>
-            <Button className="bg-lta-green hover:bg-lta-green-dark text-white" onClick={handleEditGrade} disabled={resultsSaving}>
-              {resultsSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />} Save
+            <Button variant="outline" onClick={() => { setAddCourseModuleDialog(false); setCourseModuleForm({ code: '', name: '', credits: '3', sortOrder: '0' }); }}>Cancel</Button>
+            <Button className="bg-lta-green hover:bg-lta-green-dark text-white" onClick={handleAddCourseModule} disabled={courseModuleSaving}>
+              {courseModuleSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />} Add Module
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Course Module Dialog */}
+      <Dialog open={!!editCourseModule} onOpenChange={(open) => { if (!open) { setEditCourseModule(null); setCourseModuleForm({ code: '', name: '', credits: '3', sortOrder: '0' }); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Course Module</DialogTitle>
+            <DialogDescription>Update module {editCourseModule?.code} - {editCourseModule?.name}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-cm-code">Module Code</Label>
+                <Input
+                  id="edit-cm-code"
+                  value={courseModuleForm.code}
+                  onChange={(e) => setCourseModuleForm(prev => ({ ...prev, code: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-cm-name">Module Name</Label>
+                <Input
+                  id="edit-cm-name"
+                  value={courseModuleForm.name}
+                  onChange={(e) => setCourseModuleForm(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-cm-credits">Credits</Label>
+                <Input
+                  id="edit-cm-credits"
+                  type="number"
+                  value={courseModuleForm.credits}
+                  onChange={(e) => setCourseModuleForm(prev => ({ ...prev, credits: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-cm-sort">Sort Order</Label>
+                <Input
+                  id="edit-cm-sort"
+                  type="number"
+                  value={courseModuleForm.sortOrder}
+                  onChange={(e) => setCourseModuleForm(prev => ({ ...prev, sortOrder: e.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditCourseModule(null); setCourseModuleForm({ code: '', name: '', credits: '3', sortOrder: '0' }); }}>Cancel</Button>
+            <Button className="bg-lta-green hover:bg-lta-green-dark text-white" onClick={handleEditCourseModule} disabled={courseModuleSaving}>
+              {courseModuleSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />} Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>

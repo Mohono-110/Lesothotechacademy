@@ -39,25 +39,39 @@ model Student {
 }
 
 model Course {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  description String
-  duration    String
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  description   String
+  duration      String
   durationMonths Int
-  price       Float
-  currency    String   @default("M")
-  category    String
-  level       String   @default("Beginner")
-  isPublished Boolean  @default(true)
-  image       String?
-  content     String   @default("")
-  objectives  String   @default("[]")
-  modules     String   @default("[]")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  applications Application[]
-  enrollments  Enrollment[]
+  price         Float
+  currency      String   @default("M")
+  category      String
+  level         String   @default("Beginner")
+  isPublished   Boolean  @default(true)
+  image         String?
+  content       String   @default("")
+  objectives    String   @default("[]")
+  modules       String   @default("[]")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  applications  Application[]
+  enrollments   Enrollment[]
+  courseModules CourseModule[]
+}
+
+// Structured modules defined by admin for each course
+model CourseModule {
+  id        String   @id @default(cuid())
+  courseId  String
+  code      String   // e.g. "WD101", "CN201"
+  name      String   // e.g. "Introduction to HTML & CSS"
+  credits   Int      @default(3)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 }
 
 model Application {
@@ -118,10 +132,12 @@ model ContactMessage {
   updatedAt DateTime @updatedAt
 }
 
+// Academic term/semester for a student (linked to their enrollment)
 model AcademicSemester {
   id              String   @id @default(cuid())
   studentId       String
-  name            String   // e.g. "April 2026", "July 2026"
+  enrollmentId    String?  // links to the enrollment/course
+  name            String   // e.g. "Term 1 - April 2026"
   gpa             Float    @default(0)
   cgpa            Float    @default(0)
   creditsEarned   Float    @default(0)
@@ -132,14 +148,16 @@ model AcademicSemester {
   modules         ModuleResult[]
 }
 
+// Individual module result — linked to the course module definition
 model ModuleResult {
-  id         String   @id @default(cuid())
-  semesterId String
-  code       String   // e.g. "WD101", "CN201"
-  name       String   // e.g. "Introduction to HTML & CSS"
-  credits    Int      @default(3)
-  grade      String   // e.g. "A", "B+", "C"
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  semester   AcademicSemester @relation(fields: [semesterId], references: [id])
+  id             String   @id @default(cuid())
+  semesterId     String
+  courseModuleId String?  // links to the CourseModule definition (nullable for manual entry)
+  code           String   // e.g. "WD101"
+  name           String   // e.g. "Introduction to HTML & CSS"
+  credits        Int      @default(3)
+  grade          String   // e.g. "A", "B+", "C"
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  semester       AcademicSemester @relation(fields: [semesterId], references: [id])
 }
