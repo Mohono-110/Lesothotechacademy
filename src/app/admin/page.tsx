@@ -9,7 +9,7 @@ import {
   LogOut, Loader2, CheckCircle, XCircle, Clock, Eye, EyeOff, Trash2,
   ChevronRight, Menu, X, Shield, UserCheck, UserX, DollarSign,
   GraduationCap, Phone, Mail, MapPin, Calendar, AlertCircle, Star,
-  TrendingUp, ArrowUpRight, BarChart3, ImageIcon, ExternalLink, UserCog, Save, Camera, Lock,
+  TrendingUp, ArrowUpRight, BarChart3, ImageIcon, ExternalLink, UserCog, Save, Camera, Lock, ArrowLeft, Plus,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -112,7 +112,34 @@ interface ContactMessageData {
   createdAt: string;
 }
 
-type AdminTab = 'overview' | 'students' | 'applications' | 'payments' | 'courses' | 'messages' | 'profile';
+interface ResultStudentData {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  course?: string;
+  semesterCount: number;
+}
+
+interface SemesterData {
+  id: string;
+  name: string;
+  gpa: number;
+  cgpa: number;
+  creditsEarned: number;
+  cumulativeCredits: number;
+  modules: ModuleData[];
+}
+
+interface ModuleData {
+  id: string;
+  code: string;
+  name: string;
+  credits: number;
+  grade: string;
+}
+
+type AdminTab = 'overview' | 'students' | 'applications' | 'payments' | 'courses' | 'messages' | 'results' | 'profile';
 
 // ─── Status Colors ──────────────────────────────────────────────────────────
 
@@ -162,6 +189,19 @@ export default function AdminDashboard() {
   const [viewStudent, setViewStudent] = useState<StudentData | null>(null);
   const [adminNoteDialog, setAdminNoteDialog] = useState<{ type: 'payment' | 'application'; id: string; currentNote?: string } | null>(null);
   const [adminNoteText, setAdminNoteText] = useState('');
+
+  // Results tab states
+  const [resultStudents, setResultStudents] = useState<ResultStudentData[]>([]);
+  const [selectedResultStudent, setSelectedResultStudent] = useState<ResultStudentData | null>(null);
+  const [resultSemesters, setResultSemesters] = useState<SemesterData[]>([]);
+  const [resultsLoading, setResultsLoading] = useState(false);
+  const [resultsView, setResultsView] = useState<'list' | 'detail'>('list');
+  const [addSemesterDialog, setAddSemesterDialog] = useState(false);
+  const [addModuleDialog, setAddModuleDialog] = useState<string | null>(null); // semesterId
+  const [editGradeModule, setEditGradeModule] = useState<ModuleData | null>(null);
+  const [semesterForm, setSemesterForm] = useState({ name: '', gpa: '', cgpa: '', creditsEarned: '', cumulativeCredits: '' });
+  const [moduleForm, setModuleForm] = useState({ code: '', name: '', credits: '', grade: 'A' });
+  const [resultsSaving, setResultsSaving] = useState(false);
 
   // Auth check
   useEffect(() => {
@@ -219,6 +259,27 @@ export default function AdminDashboard() {
     } catch (err) { console.error('Fetch messages error:', err); }
   }, []);
 
+  const fetchResultStudents = useCallback(async () => {
+    setResultsLoading(true);
+    try {
+      const res = await fetch('/api/admin/results');
+      const data = await res.json();
+      if (data.students) setResultStudents(data.students);
+    } catch (err) { console.error('Fetch result students error:', err); }
+    finally { setResultsLoading(false); }
+  }, []);
+
+  const fetchStudentResults = useCallback(async (studentId: string) => {
+    setResultsLoading(true);
+    try {
+      const res = await fetch(`/api/admin/results?studentId=${studentId}`);
+      const data = await res.json();
+      if (data.semesters) setResultSemesters(data.semesters);
+      if (data.student) setSelectedResultStudent(prev => prev ? { ...prev, ...data.student } : data.student);
+    } catch (err) { console.error('Fetch student results error:', err); }
+    finally { setResultsLoading(false); }
+  }, []);
+
   const fetchAll = useCallback(async () => {
     setLoading(true);
     await Promise.all([fetchStudents(), fetchApplications(), fetchPayments(), fetchCourses(), fetchMessages()]);
@@ -228,6 +289,13 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (admin) fetchAll();
   }, [admin, fetchAll]);
+
+  // Fetch results when tab is activated
+  useEffect(() => {
+    if (admin && activeTab === 'results' && resultsView === 'list') {
+      fetchResultStudents();
+    }
+  }, [admin, activeTab, resultsView, fetchResultStudents]);
 
   // Actions
   const handleLogout = () => {
@@ -400,6 +468,138 @@ export default function AdminDashboard() {
     }
   };
 
+  // Results handlers
+  const handleManageResults = async (student: ResultStudentData) => {
+    setSelectedResultStudent(student);
+    setResultsView('detail');
+    await fetchStudentResults(student.id);
+  };
+
+  const handleBackToResultList = () => {
+    setResultsView('list');
+    setSelectedResultStudent(null);
+    setResultSemesters([]);
+    fetchResultStudents();
+  };
+
+  const handleAddSemester = async () => {
+    if (!selectedResultStudent) return;
+    if (!semesterForm.name.trim()) { toast.error('Semester name is required'); return; }
+    setResultsSaving(true);
+    try {
+      const res = await fetch('/api/admin/results', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId: selectedResultStudent.id,
+          name: semesterForm.name.trim(),
+          gpa: parseFloat(semesterForm.gpa) || 0,
+          cgpa: parseFloat(semesterForm.cgpa) || 0,
+          creditsEarned: parseInt(semesterForm.creditsEarned) || 0,
+          cumulativeCredits: parseInt(semesterForm.cumulativeCredits) || 0,
+          modules: [],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to add semester');
+      toast.success('Semester added successfully');
+      setAddSemesterDialog(false);
+      setSemesterForm({ name: '', gpa: '', cgpa: '', creditsEarned: '', cumulativeCredits: '' });
+      fetchStudentResults(selectedResultStudent.id);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to add semester');
+    } finally { setResultsSaving(false); }
+  };
+
+  const handleAddModule = async () => {
+    if (!addModuleDialog) return;
+    if (!moduleForm.code.trim() || !moduleForm.name.trim()) { toast.error('Module code and name are required'); return; }
+    setResultsSaving(true);
+    try {
+      const res = await fetch('/api/admin/results', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'addModule',
+          semesterId: addModuleDialog,
+          data: {
+            code: moduleForm.code.trim(),
+            name: moduleForm.name.trim(),
+            credits: parseInt(moduleForm.credits) || 0,
+            grade: moduleForm.grade,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to add module');
+      toast.success('Module added successfully');
+      setAddModuleDialog(null);
+      setModuleForm({ code: '', name: '', credits: '', grade: 'A' });
+      if (selectedResultStudent) fetchStudentResults(selectedResultStudent.id);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to add module');
+    } finally { setResultsSaving(false); }
+  };
+
+  const handleEditGrade = async () => {
+    if (!editGradeModule) return;
+    setResultsSaving(true);
+    try {
+      const res = await fetch('/api/admin/results', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'module',
+          moduleId: editGradeModule.id,
+          data: { grade: editGradeModule.grade },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update grade');
+      toast.success('Grade updated');
+      setEditGradeModule(null);
+      if (selectedResultStudent) fetchStudentResults(selectedResultStudent.id);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update grade');
+    } finally { setResultsSaving(false); }
+  };
+
+  const handleDeleteSemester = async (semesterId: string) => {
+    if (!selectedResultStudent) return;
+    if (!confirm('Delete this semester and all its modules?')) return;
+    try {
+      const res = await fetch('/api/admin/results', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'semester', semesterId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete semester');
+      toast.success('Semester deleted');
+      fetchStudentResults(selectedResultStudent.id);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete semester');
+    }
+  };
+
+  const handleDeleteModule = async (moduleId: string) => {
+    if (!selectedResultStudent) return;
+    if (!confirm('Delete this module?')) return;
+    try {
+      const res = await fetch('/api/admin/results', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'module', moduleId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete module');
+      toast.success('Module deleted');
+      if (selectedResultStudent) fetchStudentResults(selectedResultStudent.id);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete module');
+    }
+  };
+
   // Stats
   const stats = {
     totalStudents: students.length,
@@ -421,6 +621,7 @@ export default function AdminDashboard() {
     { id: 'payments', label: 'Payments', icon: <CreditCard className="h-5 w-5" />, badge: stats.pendingPayments },
     { id: 'courses', label: 'Courses', icon: <BookOpen className="h-5 w-5" />, badge: courses.length },
     { id: 'messages', label: 'Messages', icon: <MessageSquare className="h-5 w-5" />, badge: stats.unreadMessages },
+    { id: 'results', label: 'Results', icon: <FileText className="h-5 w-5" /> },
     { id: 'profile', label: 'My Profile', icon: <UserCog className="h-5 w-5" /> },
   ];
 
@@ -1183,6 +1384,219 @@ export default function AdminDashboard() {
     </motion.div>
   );
 
+  const renderResults = () => {
+    return (
+      <motion.div key="results" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
+        {resultsView === 'list' ? (
+          <>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">Results</h2>
+                <p className="text-muted-foreground">{resultStudents.length} students with results</p>
+              </div>
+            </div>
+
+            {resultsLoading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {resultStudents.map((student, index) => (
+                  <motion.div
+                    key={student.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                  >
+                    <Card className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-4 flex-1 min-w-0">
+                            <Avatar className="h-10 w-10 shrink-0">
+                              <AvatarFallback className="bg-lta-green/10 text-lta-green font-bold">
+                                {student.firstName?.[0]}{student.lastName?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-semibold">{student.firstName} {student.lastName}</h3>
+                              <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
+                                <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{student.email}</span>
+                                {student.course && <span className="flex items-center gap-1"><BookOpen className="h-3 w-3" />{student.course}</span>}
+                                <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{student.semesterCount} semester{student.semesterCount !== 1 ? 's' : ''}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="bg-lta-green hover:bg-lta-green-dark text-white"
+                            onClick={() => handleManageResults(student)}
+                          >
+                            <FileText className="h-4 w-4 mr-1" /> Manage Results
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+                {resultStudents.length === 0 && (
+                  <Card className="p-12 text-center">
+                    <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold">No Students Found</h3>
+                    <p className="text-muted-foreground">Students will appear here once they have enrollments.</p>
+                  </Card>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="sm" onClick={handleBackToResultList}>
+                  <ArrowLeft className="h-4 w-4 mr-1" /> Back
+                </Button>
+                <div>
+                  <h2 className="text-2xl font-bold">{selectedResultStudent?.firstName} {selectedResultStudent?.lastName}</h2>
+                  <p className="text-muted-foreground">{selectedResultStudent?.email}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(`/results?studentId=${selectedResultStudent?.id}`, '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4 mr-1" /> View Result Slip
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-lta-green hover:bg-lta-green-dark text-white"
+                  onClick={() => setAddSemesterDialog(true)}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Add Semester
+                </Button>
+              </div>
+            </div>
+
+            {resultsLoading ? (
+              <div className="space-y-3">
+                {[...Array(2)].map((_, i) => (
+                  <Card key={i}><CardContent className="p-4"><Skeleton className="h-40 w-full" /></CardContent></Card>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {resultSemesters.map((semester, sIndex) => (
+                  <motion.div
+                    key={semester.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: sIndex * 0.05 }}
+                  >
+                    <Card className="overflow-hidden">
+                      <div className="bg-gradient-to-r from-lta-blue to-lta-green p-4 flex items-center justify-between">
+                        <div>
+                          <h3 className="text-white font-bold text-lg">{semester.name}</h3>
+                          <div className="flex items-center gap-4 mt-1 text-white/80 text-sm">
+                            <span>GPA: <strong className="text-white">{semester.gpa}</strong></span>
+                            <span>CGPA: <strong className="text-white">{semester.cgpa}</strong></span>
+                            <span>Credits: <strong className="text-white">{semester.creditsEarned}</strong></span>
+                            <span>Cumulative: <strong className="text-white">{semester.cumulativeCredits}</strong></span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-white hover:bg-white/20"
+                            onClick={() => setAddModuleDialog(semester.id)}
+                          >
+                            <Plus className="h-4 w-4 mr-1" /> Add Module
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-white hover:bg-white/20 hover:text-red-200"
+                            onClick={() => handleDeleteSemester(semester.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <CardContent className="p-0">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b bg-muted/30">
+                                <th className="text-left p-3 font-medium">Code</th>
+                                <th className="text-left p-3 font-medium">Module Name</th>
+                                <th className="text-center p-3 font-medium">Credits</th>
+                                <th className="text-center p-3 font-medium">Grade</th>
+                                <th className="text-right p-3 font-medium">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {semester.modules.map((mod) => (
+                                <tr key={mod.id} className="border-b last:border-0 hover:bg-muted/20">
+                                  <td className="p-3 font-mono text-xs">{mod.code}</td>
+                                  <td className="p-3">{mod.name}</td>
+                                  <td className="p-3 text-center">{mod.credits}</td>
+                                  <td className="p-3 text-center">
+                                    <Badge variant="outline" className="font-bold">{mod.grade}</Badge>
+                                  </td>
+                                  <td className="p-3 text-right">
+                                    <div className="flex items-center justify-end gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setEditGradeModule(mod)}
+                                      >
+                                        <Save className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-red-500 hover:text-red-700"
+                                        onClick={() => handleDeleteModule(mod.id)}
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                              {semester.modules.length === 0 && (
+                                <tr>
+                                  <td colSpan={5} className="p-6 text-center text-muted-foreground">
+                                    No modules yet. Click &quot;Add Module&quot; to add one.
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+                {resultSemesters.length === 0 && (
+                  <Card className="p-12 text-center">
+                    <GraduationCap className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold">No Semesters Yet</h3>
+                    <p className="text-muted-foreground">Click &quot;Add Semester&quot; to create the first semester for this student.</p>
+                  </Card>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </motion.div>
+    );
+  };
+
   // ─── Render Tab Content ───────────────────────────────────────────────────
 
   const renderTabContent = () => {
@@ -1193,6 +1607,7 @@ export default function AdminDashboard() {
       case 'payments': return renderPayments();
       case 'courses': return renderCourses();
       case 'messages': return renderMessages();
+      case 'results': return renderResults();
       case 'profile': return renderProfile();
       default: return renderOverview();
     }
@@ -1640,6 +2055,178 @@ export default function AdminDashboard() {
               </DialogFooter>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Semester Dialog */}
+      <Dialog open={addSemesterDialog} onOpenChange={setAddSemesterDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add New Semester</DialogTitle>
+            <DialogDescription>Add a new academic semester for {selectedResultStudent?.firstName} {selectedResultStudent?.lastName}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="semester-name">Semester Name</Label>
+              <Input
+                id="semester-name"
+                value={semesterForm.name}
+                onChange={(e) => setSemesterForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g. Semester 1, Year 1 Sem 1"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="semester-gpa">GPA</Label>
+                <Input
+                  id="semester-gpa"
+                  type="number"
+                  step="0.01"
+                  value={semesterForm.gpa}
+                  onChange={(e) => setSemesterForm(prev => ({ ...prev, gpa: e.target.value }))}
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="semester-cgpa">CGPA</Label>
+                <Input
+                  id="semester-cgpa"
+                  type="number"
+                  step="0.01"
+                  value={semesterForm.cgpa}
+                  onChange={(e) => setSemesterForm(prev => ({ ...prev, cgpa: e.target.value }))}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="semester-credits">Credits Earned</Label>
+                <Input
+                  id="semester-credits"
+                  type="number"
+                  value={semesterForm.creditsEarned}
+                  onChange={(e) => setSemesterForm(prev => ({ ...prev, creditsEarned: e.target.value }))}
+                  placeholder="0"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="semester-cum-credits">Cumulative Credits</Label>
+                <Input
+                  id="semester-cum-credits"
+                  type="number"
+                  value={semesterForm.cumulativeCredits}
+                  onChange={(e) => setSemesterForm(prev => ({ ...prev, cumulativeCredits: e.target.value }))}
+                  placeholder="0"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setAddSemesterDialog(false); setSemesterForm({ name: '', gpa: '', cgpa: '', creditsEarned: '', cumulativeCredits: '' }); }}>Cancel</Button>
+            <Button className="bg-lta-green hover:bg-lta-green-dark text-white" onClick={handleAddSemester} disabled={resultsSaving}>
+              {resultsSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />} Add Semester
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Module Dialog */}
+      <Dialog open={!!addModuleDialog} onOpenChange={() => { setAddModuleDialog(null); setModuleForm({ code: '', name: '', credits: '', grade: 'A' }); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Module</DialogTitle>
+            <DialogDescription>Add a new module to this semester</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="module-code">Module Code</Label>
+                <Input
+                  id="module-code"
+                  value={moduleForm.code}
+                  onChange={(e) => setModuleForm(prev => ({ ...prev, code: e.target.value }))}
+                  placeholder="e.g. CS101"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="module-name">Module Name</Label>
+                <Input
+                  id="module-name"
+                  value={moduleForm.name}
+                  onChange={(e) => setModuleForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g. Introduction to Computing"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="module-credits">Credits</Label>
+                <Input
+                  id="module-credits"
+                  type="number"
+                  value={moduleForm.credits}
+                  onChange={(e) => setModuleForm(prev => ({ ...prev, credits: e.target.value }))}
+                  placeholder="0"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="module-grade">Grade</Label>
+                <Select value={moduleForm.grade} onValueChange={(val) => setModuleForm(prev => ({ ...prev, grade: val }))}>
+                  <SelectTrigger id="module-grade">
+                    <SelectValue placeholder="Select grade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F'].map((g) => (
+                      <SelectItem key={g} value={g}>{g}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setAddModuleDialog(null); setModuleForm({ code: '', name: '', credits: '', grade: 'A' }); }}>Cancel</Button>
+            <Button className="bg-lta-green hover:bg-lta-green-dark text-white" onClick={handleAddModule} disabled={resultsSaving}>
+              {resultsSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />} Add Module
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Grade Dialog */}
+      <Dialog open={!!editGradeModule} onOpenChange={() => setEditGradeModule(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Edit Grade</DialogTitle>
+            <DialogDescription>Update grade for {editGradeModule?.name} ({editGradeModule?.code})</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-grade">Grade</Label>
+              <Select
+                value={editGradeModule?.grade || 'A'}
+                onValueChange={(val) => {
+                  if (editGradeModule) setEditGradeModule({ ...editGradeModule, grade: val });
+                }}
+              >
+                <SelectTrigger id="edit-grade">
+                  <SelectValue placeholder="Select grade" />
+                </SelectTrigger>
+                <SelectContent>
+                  {['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F'].map((g) => (
+                    <SelectItem key={g} value={g}>{g}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditGradeModule(null)}>Cancel</Button>
+            <Button className="bg-lta-green hover:bg-lta-green-dark text-white" onClick={handleEditGrade} disabled={resultsSaving}>
+              {resultsSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />} Save
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
